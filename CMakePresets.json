@@ -1,0 +1,92 @@
+{
+    "version": 3,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 20,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "base",
+            "hidden": true,
+            "environment": {
+                "LLVM_DIR": "/usr/lib/llvm-14/lib/cmake/llvm",
+                "Clang_DIR": "/usr/lib/llvm-14/lib/cmake/clang"
+            }
+        },
+        {
+            "name": "release",
+            "displayName": "Release",
+            "description": "Release build with static linking for plug-and-play distribution",
+            "inherits": "base",
+            "binaryDir": "${sourceDir}/build/release",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_INTERPROCEDURAL_OPTIMIZATION": "ON",
+                "CMAKE_EXE_LINKER_FLAGS": "-static-libgcc -static-libstdc++ -Wl,--gc-sections -Wl,-z,relro -Wl,-z,now",
+                "yaml-cpp_BUILD_SHARED_LIBS": "OFF",
+                "yaml-cpp_USE_STATIC_yaml-cpp": "ON",
+                "CMAKE_POSITION_INDEPENDENT_CODE": "OFF",
+                "CHECKPP_STRIP_SYMBOLS": "ON",
+                "CHECKPP_LTO": "ON"
+            }
+        },
+        {
+            "name": "develop",
+            "displayName": "Develop",
+            "description": "Development build with all sanitizers, warnings enabled, and debug options",
+            "inherits": "base",
+            "binaryDir": "${sourceDir}/build/develop",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_INTERPROCEDURAL_OPTIMIZATION": "OFF",
+                "CHECKPP_ENABLE_SANITIZERS": "ON",
+                "CHECKPP_WARNINGS_AS_ERRORS": "ON",
+                "CHECKPP_STRIP_SYMBOLS": "OFF",
+                "CHECKPP_LTO": "OFF",
+                "CHECKPP_ENABLE_COVERAGE": "ON",
+                "yaml-cpp_BUILD_SHARED_LIBS": "ON"
+            }
+        },
+        {
+            "name": "develop-release",
+            "displayName": "Develop Release",
+            "description": "Release configuration for testing but with debug info for analysis",
+            "inherits": "base",
+            "binaryDir": "${sourceDir}/build/develop-release",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                "CMAKE_INTERPROCEDURAL_OPTIMIZATION": "ON",
+                "CHECKPP_ENABLE_SANITIZERS": "ON",
+                "CHECKPP_WARNINGS_AS_ERRORS": "ON",
+                "CHECKPP_STRIP_SYMBOLS": "OFF",
+                "CHECKPP_LTO": "ON",
+                "CHECKPP_ENABLE_COVERAGE": "OFF",
+                "yaml-cpp_BUILD_SHARED_LIBS": "OFF"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "release",
+            "configurePreset": "release",
+            "displayName": "Release",
+            "description": "Build release preset",
+            "configuration": "Release"
+        },
+        {
+            "name": "develop",
+            "configurePreset": "develop",
+            "displayName": "Develop",
+            "description": "Build develop preset",
+            "configuration": "Debug"
+        },
+        {
+            "name": "develop-release",
+            "configurePreset": "develop-release",
+            "displayName": "Develop Release",
+            "description": "Build develop-release preset",
+            "configuration": "RelWithDebInfo"
+        }
+    ]
+}

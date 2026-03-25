@@ -1,0 +1,50 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build.sh",
+            "command": "build.sh",
+            "type": "shell",
+            "args": [
+                "${command:cmake.buildTargetName}",
+                "${command:cmake.activeConfigurePresetName}"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "run.sh",
+            "type": "shell",
+            "command": "${workspaceFolder}/tools/tasks/run.sh",
+            "args": [
+                "${command:cmake.activeConfigurePresetName}"
+            ],
+            "detail": "Build and run cpp-style-tool on itself",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "run_opencode_web_gui.sh",
+            "type": "shell",
+            "command": "run_opencode_web_gui.sh",
+            "detail": "Open OpenCode Web UI on port 4096",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            },
+            "problemMatcher": []
+        }
+    ]
+}
