@@ -28,7 +28,7 @@ if [ "$#" -gt 0 ]; then
 fi
 
 die() {
-  printf 'Release failed: %s\n' "$1" >&2
+  printf '\033[31mRelease failed: %s\033[0m\n' "$1" >&2
   exit 1
 }
 
