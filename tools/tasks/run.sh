@@ -10,7 +10,7 @@ build_only="NO"
 if [ "$#" -ge 1 ]; then
   if [ "$1" == "--help" ] || [ "$1" == "-h" ]; then
     echo "Usage: $0 [PRESET] [--build-only]"
-    echo "Available presets: release, develop, develop-release"
+    echo "Available presets: release, develop"
     echo "Default preset: release"
     echo ""
     echo "Examples:"

@@ -49,13 +49,13 @@ add_definitions(${LLVM_DEFINITIONS})
 
 add_subdirectory(clang-tidy-module)
 
-add_executable(cpp-style-tool
+add_executable(checkpp
     src/main.cpp
     src/config.cpp
     src/runner.cpp
 )
 
-target_include_directories(cpp-style-tool PRIVATE include)
+target_include_directories(checkpp PRIVATE include)
 
 if(TARGET yaml-cpp::yaml-cpp)
     set(YAML_CPP_TARGET yaml-cpp::yaml-cpp)
@@ -65,7 +65,7 @@ else()
     message(FATAL_ERROR "yaml-cpp was found, but no usable CMake target is available")
 endif()
 
-target_link_libraries(cpp-style-tool
+target_link_libraries(checkpp
     PRIVATE
     ${YAML_CPP_TARGET}
 )
@@ -74,7 +74,7 @@ if(CHECKPP_LTO)
     include(CheckIPOSupported)
     check_ipo_supported(RESULT ipo_supported OUTPUT ipo_error)
     if(ipo_supported)
-        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION cpp-style-tool TRUE)
+        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION checkpp TRUE)
         message(STATUS "IPO / LTO enabled")
     else()
         message(WARNING "IPO not supported: ${ipo_error}")
@@ -82,11 +82,11 @@ if(CHECKPP_LTO)
 endif()
 
 if(CHECKPP_STRIP_SYMBOLS)
-    add_custom_command(TARGET cpp-style-tool POST_BUILD
-        COMMAND ${CMAKE_OBJCOPY} --strip-all $<TARGET_FILE:cpp-style-tool> ${CMAKE_CURRENT_BINARY_DIR}/cpp-style-tool-stripped
-        COMMAND mv ${CMAKE_CURRENT_BINARY_DIR}/cpp-style-tool-stripped $<TARGET_FILE:cpp-style-tool>
+    add_custom_command(TARGET checkpp POST_BUILD
+        COMMAND ${CMAKE_OBJCOPY} --strip-all $<TARGET_FILE:checkpp> ${CMAKE_CURRENT_BINARY_DIR}/checkpp-stripped
+        COMMAND mv ${CMAKE_CURRENT_BINARY_DIR}/checkpp-stripped $<TARGET_FILE:checkpp>
         COMMENT "Stripping symbols from executable"
     )
 endif()
 
-install(TARGETS cpp-style-tool)
+install(TARGETS checkpp)

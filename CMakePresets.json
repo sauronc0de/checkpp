@@ -10,8 +10,8 @@
             "name": "base",
             "hidden": true,
             "environment": {
-                "LLVM_DIR": "/usr/lib/llvm-14/lib/cmake/llvm",
-                "Clang_DIR": "/usr/lib/llvm-14/lib/cmake/clang"
+                "LLVM_DIR": "/usr/lib/llvm-18/lib/cmake/llvm",
+                "Clang_DIR": "/usr/lib/llvm-18/lib/cmake/clang"
             }
         },
         {
@@ -47,23 +47,6 @@
                 "CHECKPP_ENABLE_COVERAGE": "ON",
                 "yaml-cpp_BUILD_SHARED_LIBS": "ON"
             }
-        },
-        {
-            "name": "develop-release",
-            "displayName": "Develop Release",
-            "description": "Release configuration for testing but with debug info for analysis",
-            "inherits": "base",
-            "binaryDir": "${sourceDir}/build/develop-release",
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-                "CMAKE_INTERPROCEDURAL_OPTIMIZATION": "ON",
-                "CHECKPP_ENABLE_SANITIZERS": "ON",
-                "CHECKPP_WARNINGS_AS_ERRORS": "ON",
-                "CHECKPP_STRIP_SYMBOLS": "OFF",
-                "CHECKPP_LTO": "ON",
-                "CHECKPP_ENABLE_COVERAGE": "OFF",
-                "yaml-cpp_BUILD_SHARED_LIBS": "OFF"
-            }
         }
     ],
     "buildPresets": [
@@ -80,13 +63,6 @@
             "displayName": "Develop",
             "description": "Build develop preset",
             "configuration": "Debug"
-        },
-        {
-            "name": "develop-release",
-            "configurePreset": "develop-release",
-            "displayName": "Develop Release",
-            "description": "Build develop-release preset",
-            "configuration": "RelWithDebInfo"
         }
     ]
 }

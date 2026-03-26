@@ -10,7 +10,7 @@ int main(int argc, char **argv)
 {
   if(argc < 4)
   {
-    std::cerr << "Usage: cpp-style-tool <project_root> <compile_commands_dir> <rules.yaml> [plugin_path]\n";
+    std::cerr << "Usage: checkpp <project_root> <compile_commands_dir> <rules.yaml> [plugin_path]\n";
     return 1;
   }
 

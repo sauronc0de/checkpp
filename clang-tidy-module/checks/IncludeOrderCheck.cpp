@@ -10,7 +10,7 @@ public:
   explicit IncludeOrderCallbacks(std::vector<IncludeOrderCheck::IncludeEntry> &includes) : includes_(includes) {}
   void InclusionDirective(clang::SourceLocation hashLoc,
                           const clang::Token &, llvm::StringRef fileName, bool isAngled,
-                          clang::CharSourceRange, const clang::FileEntry *,
+                          clang::CharSourceRange, clang::OptionalFileEntryRef,
                           llvm::StringRef, llvm::StringRef, const clang::Module *,
                           clang::SrcMgr::CharacteristicKind) override
   {
