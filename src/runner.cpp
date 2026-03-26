@@ -209,7 +209,8 @@ std::vector<Finding> Runner::runForFile(const fs::path &file,
   return findings;
 }
 
-void Runner::printFindings(const std::vector<Finding> &findings) const
+void Runner::printFindings(const std::vector<Finding> &findings,
+                           const std::vector<fs::path> &checkedFiles) const
 {
   int errors = 0;
   int warnings = 0;
@@ -242,6 +243,12 @@ void Runner::printFindings(const std::vector<Finding> &findings) const
   std::cout << "  " << g_kRed << "Errors:   " << errors << g_kReset << "\n";
   std::cout << "  " << g_kYellow << "Warnings: " << warnings << g_kReset << "\n";
   std::cout << "  " << g_kBlue << "Infos:    " << infos << g_kReset << "\n";
+
+  std::cout << g_kBold << "Checked files" << g_kReset << "\n";
+  for(const auto &file : checkedFiles)
+  {
+    std::cout << "  " << file.string() << "\n";
+  }
 }
 
 int Runner::run(const fs::path &projectRoot,
@@ -275,7 +282,7 @@ int Runner::run(const fs::path &projectRoot,
     return a.column_ < b.column_;
   });
 
-  printFindings(findings);
+  printFindings(findings, kFiles);
 
   if(hasCommandFailure)
   {

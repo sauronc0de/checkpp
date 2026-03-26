@@ -31,6 +31,7 @@ private:
                                   const std::filesystem::path &compileDbDir,
                                   const std::filesystem::path &pluginPath,
                                   bool &commandFailed) const;
-  void printFindings(const std::vector<Finding> &findings) const;
+  void printFindings(const std::vector<Finding> &findings,
+                     const std::vector<std::filesystem::path> &checkedFiles) const;
   const Config &config_;
 };
