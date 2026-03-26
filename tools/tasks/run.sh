@@ -49,18 +49,24 @@ echo "Running checkpp on itself..."
 echo "  Project: ${PROJECT_ROOT}"
 echo "  Compile DB: ${build_dir}"
 echo "  Rules: ${PROJECT_ROOT}/config/rules.yaml"
-echo "  Plugin: ${build_dir}/clang-tidy-module/CompanyClangTidyModule.so"
+if [ "${preset}" = "release" ]; then
+  echo "  Ignore paths: ${PROJECT_ROOT}/config/ignore_paths.txt"
+else
+  echo "  Plugin: ${build_dir}/clang-tidy-module/CompanyClangTidyModule.so"
+fi
 echo "  Log: ${log_file}"
 echo ""
 
 mkdir -p "${build_dir}"
 
 set +e
-"${build_dir}/checkpp" \
-  "${PROJECT_ROOT}" \
-  "${build_dir}" \
-  "${PROJECT_ROOT}/config/rules.yaml" \
-  "${build_dir}/clang-tidy-module/CompanyClangTidyModule.so" 2>&1 | tee "${log_file}"
+run_cmd=("${build_dir}/checkpp" "${PROJECT_ROOT}" "${build_dir}" "${PROJECT_ROOT}/config/rules.yaml")
+if [ "${preset}" = "release" ]; then
+  run_cmd+=(--ignore-paths "${PROJECT_ROOT}/config/ignore_paths.txt")
+else
+  run_cmd+=(--plugin "${build_dir}/clang-tidy-module/CompanyClangTidyModule.so" --ignore-paths "${PROJECT_ROOT}/config/ignore_paths.txt")
+fi
+"${run_cmd[@]}" 2>&1 | tee "${log_file}"
 tool_exit_code=${PIPESTATUS[0]}
 set -e
 
