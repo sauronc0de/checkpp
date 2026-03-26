@@ -5,9 +5,10 @@ Use this skill for the repository release flow.
 ## Purpose
 
 - Keep releases strict and reproducible.
-- Use `CMakeLists.txt` as the only version source of truth.
-- Publish a GitHub release from the validated release branch.
-- Bump the next development version on the default branch after release.
+- Use `CMakeLists.txt` as the version source of truth.
+- Release only from the default branch.
+- If the current branch is not the default branch, stop immediately.
+- Bump the version before validation, then commit, push, tag, and publish.
 
 ## Input
 
@@ -17,7 +18,6 @@ Use this skill for the repository release flow.
 ## Fixed Assumptions
 
 - Default branch is detected from `origin/HEAD`.
-- Release branch is `release`.
 - Remote is `origin`.
 - Build preset is `release`.
 - Release tag format is `vX.Y.Z` from `project(... VERSION ...)`.
@@ -25,7 +25,7 @@ Use this skill for the repository release flow.
 ## Required Checks
 
 - Start on the default branch with a clean working tree.
-- Pull the latest default branch before building.
+- Pull the latest default branch before validation.
 - Build must succeed.
 - Build logs must contain no warnings.
 - Checker must report `Errors: 0` and `Warnings: 0`.
@@ -34,23 +34,22 @@ Use this skill for the repository release flow.
 ## Release Sequence
 
 1. Confirm the current branch is the default branch.
-2. Pull the latest default branch from the remote.
-3. Prompt for `patch`, `minor`, or `major`.
-4. Build the Release preset and run the checker.
-5. Switch to the release branch and merge the validated default branch.
-6. Tag the merged commit using the current CMake project version.
-7. Package the binary and release files.
-8. Push the release branch and tag atomically.
+2. Prompt for `patch`, `minor`, or `major`.
+3. Bump `CMakeLists.txt` to the next version.
+4. Pull the latest default branch from the remote.
+5. Build the Release preset and run the checker.
+6. Commit and push the version bump on the default branch.
+7. Create an annotated tag on that commit.
+8. Package the executable and dependency files.
 9. Create the GitHub release and upload the assets.
-10. Return to the default branch.
-11. Bump the CMake project version according to the chosen release type.
-12. Commit and push the version bump.
 
 ## Outputs
 
 - Git tag: `vX.Y.Z`
 - GitHub release assets:
-  - `checkpp-vX.Y.Z.tar.gz`
+  - `checkpp-vX.Y.Z`
+  - `CompanyClangTidyModule-vX.Y.Z.so`
+  - `rules-vX.Y.Z.yaml`
   - `release-notes-vX.Y.Z.md`
   - `SHA256SUMS`
 - A version bump commit on the default branch.
@@ -58,3 +57,9 @@ Use this skill for the repository release flow.
 ## Entry Point
 
 - Script: `tools/tasks/release.sh`
+
+## Release Notes
+
+- Keep them compact.
+- Include every commit subject since the previous release tag, excluding the version-bump commit.
+- Do not include long prose or extra commentary.

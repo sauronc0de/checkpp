@@ -3,32 +3,28 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-DEFAULT_BRANCH="main"
-RELEASE_BRANCH="release"
-REMOTE="origin"
 PRESET="release"
+REMOTE="origin"
+DEFAULT_BRANCH=""
 
 usage() {
   cat <<EOF
-Usage: $0 [--help]
+Usage: $0
 
 Runs the strict release workflow.
-You will be prompted to choose patch, minor, or major release type.
+You will be prompted for patch, minor, or major.
 EOF
 }
 
+if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
+  usage
+  exit 0
+fi
+
 if [ "$#" -gt 0 ]; then
-  case "$1" in
-    -h|--help)
-      usage
-      exit 0
-      ;;
-    *)
-      printf 'Unknown argument: %s\n' "$1" >&2
-      usage >&2
-      exit 1
-      ;;
-  esac
+  printf 'Unknown arguments.\n' >&2
+  usage >&2
+  exit 1
 fi
 
 die() {
@@ -46,6 +42,16 @@ require_cmd() {
 
 current_branch() {
   git branch --show-current
+}
+
+default_branch() {
+  local remote_head
+  remote_head="$(git symbolic-ref --quiet --short "refs/remotes/${REMOTE}/HEAD" 2>/dev/null || true)"
+  if [ -n "$remote_head" ]; then
+    printf '%s\n' "${remote_head#${REMOTE}/}"
+  else
+    printf '%s\n' "main"
+  fi
 }
 
 project_version() {
@@ -88,7 +94,7 @@ except subprocess.CalledProcessError:
 PY
 }
 
-choose_release_type() {
+prompt_release_type() {
   if [ ! -t 0 ]; then
     die "Interactive terminal required to choose patch, minor, or major"
   fi
@@ -96,7 +102,7 @@ choose_release_type() {
   while true; do
     printf 'Select release type [patch/minor/major]: '
     IFS= read -r release_type || die "Failed to read release type"
-    case "${release_type}" in
+    case "$release_type" in
       patch|minor|major)
         printf '%s\n' "$release_type"
         return 0
@@ -106,6 +112,40 @@ choose_release_type() {
         ;;
     esac
   done
+}
+
+bump_version() {
+  local release_type="$1"
+  python3 - "$release_type" <<'PY'
+from pathlib import Path
+import re
+import sys
+
+release_type = sys.argv[1]
+path = Path('CMakeLists.txt')
+text = path.read_text(encoding='utf-8')
+pattern = re.compile(r'(project\(cpp_style_tool\s+VERSION\s+)([0-9]+)\.([0-9]+)\.([0-9]+)(\s+LANGUAGES\s+C\s+CXX\))')
+match = pattern.search(text)
+if not match:
+    raise SystemExit('could not find project version in CMakeLists.txt')
+
+major, minor, patch = map(int, match.group(2, 3, 4))
+if release_type == 'patch':
+    patch += 1
+elif release_type == 'minor':
+    minor += 1
+    patch = 0
+elif release_type == 'major':
+    major += 1
+    minor = 0
+    patch = 0
+else:
+    raise SystemExit(f'invalid release type: {release_type}')
+
+new_version = f'{major}.{minor}.{patch}'
+path.write_text(pattern.sub(rf'\1{new_version}\5', text, count=1), encoding='utf-8')
+print(new_version)
+PY
 }
 
 assert_clean_tree() {
@@ -169,40 +209,6 @@ if int(errors.group(1)) != 0 or int(warnings.group(1)) != 0:
 PY
 }
 
-bump_version() {
-  local release_type="$1"
-  python3 - "$release_type" <<'PY'
-from pathlib import Path
-import re
-import sys
-
-release_type = sys.argv[1]
-path = Path('CMakeLists.txt')
-text = path.read_text(encoding='utf-8')
-pattern = re.compile(r'(project\(cpp_style_tool\s+VERSION\s+)([0-9]+)\.([0-9]+)\.([0-9]+)(\s+LANGUAGES\s+C\s+CXX\))')
-match = pattern.search(text)
-if not match:
-    raise SystemExit('could not find project version in CMakeLists.txt')
-
-major, minor, patch = map(int, match.group(2, 3, 4))
-if release_type == 'patch':
-    patch += 1
-elif release_type == 'minor':
-    minor += 1
-    patch = 0
-elif release_type == 'major':
-    major += 1
-    minor = 0
-    patch = 0
-else:
-    raise SystemExit(f'invalid release type: {release_type}')
-
-new_version = f'{major}.{minor}.{patch}'
-path.write_text(pattern.sub(rf'\1{new_version}\5', text, count=1), encoding='utf-8')
-print(new_version)
-PY
-}
-
 require_cmd git
 require_cmd cmake
 require_cmd gh
@@ -212,32 +218,31 @@ require_cmd sha256sum
 
 cd "$PROJECT_ROOT"
 
-DEFAULT_REMOTE_HEAD="$(git symbolic-ref --quiet --short "refs/remotes/${REMOTE}/HEAD" 2>/dev/null || true)"
-if [ -n "$DEFAULT_REMOTE_HEAD" ]; then
-  DEFAULT_BRANCH="${DEFAULT_REMOTE_HEAD#${REMOTE}/}"
-fi
-
+DEFAULT_BRANCH="$(default_branch)"
 CURRENT_BRANCH="$(current_branch)"
+
 if [ "$CURRENT_BRANCH" != "$DEFAULT_BRANCH" ]; then
-  die "Run this script from the default branch (${DEFAULT_BRANCH}), not ${CURRENT_BRANCH}"
+  die "Release can only run from ${DEFAULT_BRANCH}; current branch is ${CURRENT_BRANCH}"
 fi
 
 assert_clean_tree
+
+RELEASE_TYPE="$(prompt_release_type)"
 
 log "Pulling latest ${DEFAULT_BRANCH} from ${REMOTE}"
 git pull --ff-only "$REMOTE" "$DEFAULT_BRANCH"
+
 assert_clean_tree
 
-RELEASE_TYPE="$(choose_release_type)"
-VERSION="$(project_version)"
-TAG="v${VERSION}"
+NEXT_VERSION="$(bump_version "$RELEASE_TYPE")"
+TAG="v${NEXT_VERSION}"
+
 BUILD_DIR="${PROJECT_ROOT}/build/${PRESET}"
 CHECKPP_BIN="${BUILD_DIR}/checkpp"
 PLUGIN_PATH="${BUILD_DIR}/clang-tidy-module/CompanyClangTidyModule.so"
 RULES_PATH="${PROJECT_ROOT}/config/rules.yaml"
 RELEASE_DIR="${BUILD_DIR}/release-${TAG}"
-ARTIFACT_DIR="${RELEASE_DIR}/payload"
-ARCHIVE_PATH="${RELEASE_DIR}/checkpp-${TAG}.tar.gz"
+ARTIFACT_DIR="${RELEASE_DIR}/assets"
 NOTES_PATH="${RELEASE_DIR}/release-notes-${TAG}.md"
 SHA_PATH="${RELEASE_DIR}/SHA256SUMS"
 BUILD_LOG="${RELEASE_DIR}/build.log"
@@ -245,7 +250,7 @@ CHECKER_LOG="${RELEASE_DIR}/checker.log"
 
 mkdir -p "$RELEASE_DIR"
 
-log "Validating release build on ${DEFAULT_BRANCH}"
+log "Validating version bump ${NEXT_VERSION} on ${DEFAULT_BRANCH}"
 if ! run_logged "$BUILD_LOG" cmake --preset "$PRESET"; then
   die "CMake configure failed (see ${BUILD_LOG})"
 fi
@@ -269,6 +274,11 @@ if ! run_logged "$CHECKER_LOG" "$CHECKPP_BIN" "$PROJECT_ROOT" "$BUILD_DIR" "$RUL
 fi
 verify_checker_output "$CHECKER_LOG" || die "Checker reported warnings or errors (see ${CHECKER_LOG})"
 
+log "Committing version bump ${NEXT_VERSION}"
+git add CMakeLists.txt
+git commit -m "chore: bump version to v${NEXT_VERSION}"
+git push "$REMOTE" "$DEFAULT_BRANCH"
+
 if git rev-parse --verify --quiet "refs/tags/${TAG}" >/dev/null; then
   die "Tag already exists locally: ${TAG}"
 fi
@@ -276,57 +286,52 @@ if git ls-remote --exit-code --tags "$REMOTE" "refs/tags/${TAG}" >/dev/null 2>&1
   die "Tag already exists on ${REMOTE}: ${TAG}"
 fi
 
-log "Switching to release branch ${RELEASE_BRANCH}"
-if git show-ref --verify --quiet "refs/heads/${RELEASE_BRANCH}"; then
-  git switch "$RELEASE_BRANCH"
-else
-  git switch -c "$RELEASE_BRANCH"
-fi
-
-log "Merging ${DEFAULT_BRANCH} into ${RELEASE_BRANCH}"
-git merge --no-ff --no-edit "$DEFAULT_BRANCH"
-
-log "Tagging release ${TAG}"
-git tag -a "$TAG" -m "Release ${TAG}"
-
 log "Packaging release artifacts"
 mkdir -p "$ARTIFACT_DIR"
-cp "$CHECKPP_BIN" "$ARTIFACT_DIR/checkpp"
-cp "$PLUGIN_PATH" "$ARTIFACT_DIR/CompanyClangTidyModule.so"
-cp "$PROJECT_ROOT/config/rules.yaml" "$ARTIFACT_DIR/rules.yaml"
-cp "$PROJECT_ROOT/README.md" "$ARTIFACT_DIR/README.md"
+cp "$CHECKPP_BIN" "$ARTIFACT_DIR/checkpp-${TAG}"
+cp "$PLUGIN_PATH" "$ARTIFACT_DIR/CompanyClangTidyModule-${TAG}.so"
+cp "$PROJECT_ROOT/config/rules.yaml" "$ARTIFACT_DIR/rules-${TAG}.yaml"
 
 previous_ref="$(previous_release_ref "$TAG")"
+notes_head="$(git rev-parse HEAD^ 2>/dev/null || true)"
+if [ -z "$notes_head" ]; then
+  notes_head="$previous_ref"
+fi
+commit_count="$(git rev-list --count "${previous_ref}..${notes_head}")"
 cat > "$NOTES_PATH" <<EOF
 # ${TAG}
 
-Release generated from ${RELEASE_BRANCH} at $(git rev-parse --short HEAD).
+Release generated from ${DEFAULT_BRANCH} at $(git rev-parse --short HEAD).
 
 ## Changes since ${previous_ref}
+
+${commit_count} commit(s)
 EOF
-git log --no-merges --pretty=format:'- %s (%h)' "${previous_ref}..HEAD" >> "$NOTES_PATH"
+if [ "$commit_count" -gt 0 ]; then
+  git log --no-merges --pretty=format:'- %s' "${previous_ref}..${notes_head}" >> "$NOTES_PATH"
+else
+  printf '%s\n' '- No changes' >> "$NOTES_PATH"
+fi
 printf '\n' >> "$NOTES_PATH"
 
-tar -czf "$ARCHIVE_PATH" -C "$ARTIFACT_DIR" .
-sha256sum "$ARCHIVE_PATH" "$NOTES_PATH" > "$SHA_PATH"
+sha256sum \
+  "$ARTIFACT_DIR/checkpp-${TAG}" \
+  "$ARTIFACT_DIR/CompanyClangTidyModule-${TAG}.so" \
+  "$ARTIFACT_DIR/rules-${TAG}.yaml" \
+  "$NOTES_PATH" > "$SHA_PATH"
 
-log "Pushing tag and release branch"
-git push --atomic "$REMOTE" "$RELEASE_BRANCH" "refs/tags/${TAG}"
+log "Tagging release ${TAG}"
+git tag -a "$TAG" -m "Release ${TAG}"
+git push "$REMOTE" "refs/tags/${TAG}"
 
 log "Creating GitHub release ${TAG}"
 gh release create "$TAG" \
   --title "$TAG" \
   --notes-file "$NOTES_PATH" \
-  "$ARCHIVE_PATH" \
+  "$ARTIFACT_DIR/checkpp-${TAG}" \
+  "$ARTIFACT_DIR/CompanyClangTidyModule-${TAG}.so" \
+  "$ARTIFACT_DIR/rules-${TAG}.yaml" \
   "$NOTES_PATH" \
   "$SHA_PATH"
 
-log "Checking out ${DEFAULT_BRANCH} to bump version"
-git switch "$DEFAULT_BRANCH"
-
-NEXT_VERSION="$(bump_version "$RELEASE_TYPE")"
-git add CMakeLists.txt
-git commit -m "chore: bump version to v${NEXT_VERSION}"
-git push "$REMOTE" "$DEFAULT_BRANCH"
-
-log "Release completed: ${TAG} -> next version ${NEXT_VERSION} (${RELEASE_TYPE})"
+log "Release completed: ${TAG}"
