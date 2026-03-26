@@ -19,7 +19,7 @@ std::string trim(const std::string &value)
 }
 } // namespace
 
-bool Config::loadFromFile(const std::string &path)
+bool Config::loadFromFile(const std::string &path, const std::string &ignorePathsPath)
 {
   YAML::Node root = YAML::LoadFile(path);
   if(!root["checks"])
@@ -41,20 +41,23 @@ bool Config::loadFromFile(const std::string &path)
   }
 
   ignoredPathFilters_.clear();
-  const std::filesystem::path kIgnorePathsPath = std::filesystem::path(path).parent_path() / "ignore_paths.txt";
-  std::ifstream ignorePathsFile(kIgnorePathsPath);
-  if(ignorePathsFile.is_open())
+  if(!ignorePathsPath.empty())
   {
-    std::string line;
-    while(std::getline(ignorePathsFile, line))
+    const std::filesystem::path kIgnorePathsPath(ignorePathsPath);
+    std::ifstream ignorePathsFile(kIgnorePathsPath);
+    if(ignorePathsFile.is_open())
     {
-      const std::string kTrimmedLine = trim(line);
-      if(kTrimmedLine.empty() || kTrimmedLine.rfind("#", 0) == 0)
+      std::string line;
+      while(std::getline(ignorePathsFile, line))
       {
-        continue;
-      }
+        const std::string kTrimmedLine = trim(line);
+        if(kTrimmedLine.empty() || kTrimmedLine.rfind("#", 0) == 0)
+        {
+          continue;
+        }
 
-      ignoredPathFilters_.push_back(kTrimmedLine);
+        ignoredPathFilters_.push_back(kTrimmedLine);
+      }
     }
   }
 

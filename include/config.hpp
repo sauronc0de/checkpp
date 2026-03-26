@@ -15,7 +15,7 @@ struct RuleSetting
 class Config
 {
 public:
-  bool loadFromFile(const std::string &path);
+  bool loadFromFile(const std::string &path, const std::string &ignorePathsPath = {});
   RuleSetting getRule(const std::string &checkName) const;
   std::vector<std::string> enabledChecks() const;
   const std::vector<std::string> &ignoredPathFilters() const;

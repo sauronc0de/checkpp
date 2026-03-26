@@ -28,7 +28,7 @@ fi
 
 JOBS="${CMAKE_BUILD_PARALLEL_LEVEL:-$(nproc)}"
 build_dir="${PROJECT_ROOT}/build/${preset}"
-log_file="${build_dir}/cpp_style_check.log"
+log_file="${build_dir}/checkpp_style_check.log"
 
 echo "Building project with preset: ${preset}"
 cmake --preset "${preset}" || exit 1

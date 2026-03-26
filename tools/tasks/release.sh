@@ -61,7 +61,7 @@ import re
 import sys
 
 text = Path('CMakeLists.txt').read_text(encoding='utf-8')
-match = re.search(r'project\(cpp_style_tool\s+VERSION\s+([0-9]+\.[0-9]+\.[0-9]+)\b', text)
+  match = re.search(r'project\(checkpp\s+VERSION\s+([0-9]+\.[0-9]+\.[0-9]+)\b', text)
 if not match:
     sys.exit('could not find project version in CMakeLists.txt')
 print(match.group(1))
@@ -124,7 +124,7 @@ import sys
 release_type = sys.argv[1]
 path = Path('CMakeLists.txt')
 text = path.read_text(encoding='utf-8')
-pattern = re.compile(r'(project\(cpp_style_tool\s+VERSION\s+)([0-9]+)\.([0-9]+)\.([0-9]+)(\s+LANGUAGES\s+C\s+CXX\))')
+pattern = re.compile(r'(project\(checkpp\s+VERSION\s+)([0-9]+)\.([0-9]+)\.([0-9]+)(\s+LANGUAGES\s+C\s+CXX\))')
 match = pattern.search(text)
 if not match:
     raise SystemExit('could not find project version in CMakeLists.txt')
@@ -269,7 +269,7 @@ if [ ! -f "$PLUGIN_PATH" ]; then
 fi
 
 log "Running checker validation"
-if ! run_logged "$CHECKER_LOG" "$CHECKPP_BIN" "$PROJECT_ROOT" "$BUILD_DIR" "$RULES_PATH"; then
+if ! run_logged "$CHECKER_LOG" "$CHECKPP_BIN" "$PROJECT_ROOT" "$BUILD_DIR" "$RULES_PATH" --ignore-paths "$PROJECT_ROOT/config/ignore_paths.txt"; then
   die "Checker execution failed (see ${CHECKER_LOG})"
 fi
 verify_checker_output "$CHECKER_LOG" || die "Checker reported warnings or errors (see ${CHECKER_LOG})"

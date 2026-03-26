@@ -1,4 +1,4 @@
-# C++ Style Tool
+# checkpp
 
 Professional C++ style checker built around a custom `clang-tidy` module and a colorful wrapper CLI.
 
@@ -7,10 +7,16 @@ Professional C++ style checker built around a custom `clang-tidy` module and a c
 ```bash
 cmake --preset release
 cmake --build --preset release -j
-./build/release/checkpp . ./build/release ./config/rules.yaml
+./build/release/checkpp <project_root> <compile_commands_dir> <rules.yaml> [--plugin <plugin_path>] [--ignore-paths <ignore_paths.txt>]
 ```
 
-That command checks the current project using the bundled [`config/rules.yaml`](config/rules.yaml) file and the self-contained release executable.
+Pass `rules.yaml` every time. If you do not pass it, the program stops and reports the missing input.
+
+`ignore_paths.txt` is optional. If you omit it, no paths are ignored.
+
+The links below show example files you can copy or edit:
+- [`rules.yaml`](config/rules.yaml)
+- [`ignore_paths.txt`](config/ignore_paths.txt)
 
 ## Build
 
@@ -38,20 +44,24 @@ You also need `yaml-cpp` installed.
 ## Run
 
 ```bash
-./build/release/checkpp <project_root> <compile_commands_dir> <rules.yaml>
+./build/release/checkpp <project_root> <compile_commands_dir> <rules.yaml> [--plugin <plugin_path>] [--ignore-paths <ignore_paths.txt>]
 ```
 
-Example:
+Example with rules and ignore file:
 
 ```bash
-./build/release/checkpp . ./build/release ./config/rules.yaml
+./build/release/checkpp . ./build/release ./config/rules.yaml --ignore-paths ./config/ignore_paths.txt
 ```
 
-Pass a fourth argument if you want to use a different plugin path.
+The plugin is optional because the release build embeds it. Pass `--plugin` only if you want to use an external module.
+
+You can pass `--ignore-paths` without `--plugin`.
 
 ## Rules
 
-The default rule set lives in [`config/rules.yaml`](config/rules.yaml). Edit that file to change severities, enable/disable checks, or add new rules.
+The rule set is required. Use [`rules.yaml`](config/rules.yaml) as a reference for the expected format, then pass your own file as the third CLI argument.
+
+The ignore list is optional. Use [`ignore_paths.txt`](config/ignore_paths.txt) as a reference, then pass your own file with `--ignore-paths` only when you want path filtering.
 
 ## Highlights
 
