@@ -75,6 +75,17 @@
                 ]
             },
             {
+                "cwd": "",
+                "name": "🚀 Release",
+                "color": "#9C27B0",
+                "singleInstance": true,
+                "useVsCodeApi": true,
+                "command": "workbench.action.tasks.runTask",
+                "args": [
+                    "release.sh"
+                ]
+            },
+            {
                 "cwd": "", // Terminal initial folder ${workspaceFolder} and os user home as defaults
                 "name": "🧱 Build",
                 "color": "#4CAF50",

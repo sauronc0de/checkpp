@@ -26,6 +26,7 @@
                 "CMAKE_EXE_LINKER_FLAGS": "-static-libgcc -static-libstdc++ -Wl,--gc-sections -Wl,-z,relro -Wl,-z,now",
                 "yaml-cpp_BUILD_SHARED_LIBS": "OFF",
                 "yaml-cpp_USE_STATIC_yaml-cpp": "ON",
+                "BUILD_SHARED_LIBS": "OFF",
                 "CMAKE_POSITION_INDEPENDENT_CODE": "OFF",
                 "CHECKPP_STRIP_SYMBOLS": "ON",
                 "CHECKPP_LTO": "ON"

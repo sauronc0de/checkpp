@@ -1,6 +1,4 @@
-set(LLVM_LINK_COMPONENTS Support)
-
-add_clang_library(CompanyClangTidyModule MODULE
+add_library(CompanyClangTidyModule MODULE
     company_module.cpp
     checks/boolean_variable_check.cpp
     checks/class_name_check.cpp
@@ -16,9 +14,6 @@ add_clang_library(CompanyClangTidyModule MODULE
     checks/struct_name_check.cpp
     checks/template_parameter_check.cpp
     checks/variable_name_check.cpp
-
-    PLUGIN_TOOL
-    clang-tidy
 )
 
 target_include_directories(CompanyClangTidyModule PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
