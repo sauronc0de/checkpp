@@ -14,7 +14,7 @@ if [ "$#" -ge 1 ]; then
     echo "Default preset: release"
     echo ""
     echo "Examples:"
-    echo "  $0            # Build release, then run cpp-style-tool"
+    echo "  $0            # Build release, then run checkpp"
     echo "  $0 develop    # Build develop, then run"
     echo "  $0 release --build-only  # Build release only"
     exit 0
@@ -39,13 +39,13 @@ if [ "${build_only}" == "YES" ]; then
   exit 0
 fi
 
-if [ ! -f "${build_dir}/cpp-style-tool" ]; then
-  echo "Error: cpp-style-tool not found at ${build_dir}/cpp-style-tool" >&2
+if [ ! -f "${build_dir}/checkpp" ]; then
+  echo "Error: checkpp not found at ${build_dir}/checkpp" >&2
   exit 1
 fi
 
 echo ""
-echo "Running cpp-style-tool on itself..."
+echo "Running checkpp on itself..."
 echo "  Project: ${PROJECT_ROOT}"
 echo "  Compile DB: ${build_dir}"
 echo "  Rules: ${PROJECT_ROOT}/config/rules.yaml"
@@ -56,7 +56,7 @@ echo ""
 mkdir -p "${build_dir}"
 
 set +e
-"${build_dir}/cpp-style-tool" \
+"${build_dir}/checkpp" \
   "${PROJECT_ROOT}" \
   "${build_dir}" \
   "${PROJECT_ROOT}/config/rules.yaml" \
