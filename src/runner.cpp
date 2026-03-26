@@ -315,8 +315,10 @@ int Runner::run(const fs::path &projectRoot,
   std::vector<Finding> findings;
   bool isCommandFailed = false;
   bool hasCommandFailure = false;
+  std::cout << g_kBold << "Scanning files" << g_kReset << "\n";
   for(const auto &file : kFiles)
   {
+    std::cout << "\r  " << file.string() << "                              " << std::flush;
     auto current = runForFile(file, compileDbDir, pluginPath, isCommandFailed);
     findings.insert(findings.end(), current.begin(), current.end());
     if(isCommandFailed)
@@ -325,6 +327,8 @@ int Runner::run(const fs::path &projectRoot,
       isCommandFailed = false;
     }
   }
+
+  std::cout << "\r" << std::string(80, ' ') << "\r";
 
   std::sort(findings.begin(), findings.end(), [](const Finding &a, const Finding &b) {
     if(a.path_ != b.path_) return a.path_.string() < b.path_.string();
