@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(cpp_style_tool LANGUAGES C CXX)
+project(cpp_style_tool VERSION 0.0.0 LANGUAGES C CXX)
 
 option(CHECKPP_STRIP_SYMBOLS "Strip symbols from executable" OFF)
 option(CHECKPP_LTO "Enable Link-Time Optimization" OFF)

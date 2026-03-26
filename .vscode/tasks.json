@@ -20,7 +20,7 @@
             "args": [
                 "${command:cmake.activeConfigurePresetName}"
             ],
-            "detail": "Build and run cpp-style-tool on itself",
+            "detail": "Build and run checkpp on itself",
             "options": {
                 "cwd": "${workspaceFolder}"
             },

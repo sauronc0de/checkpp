@@ -1,21 +1,21 @@
 set(LLVM_LINK_COMPONENTS Support)
 
 add_clang_library(CompanyClangTidyModule MODULE
-    CompanyModule.cpp
-    checks/BooleanVariableCheck.cpp
-    checks/ClassNameCheck.cpp
-    checks/ConstructorInitListCheck.cpp
-    checks/EnumNameCheck.cpp
-    checks/EnumValueCheck.cpp
-    checks/FileNamingCheck.cpp
-    checks/FunctionNameCheck.cpp
-    checks/IncludeOrderCheck.cpp
-    checks/MemberVariableCheck.cpp
-    checks/NamespaceNameCheck.cpp
-    checks/NoUsingNamespaceStdCheck.cpp
-    checks/StructNameCheck.cpp
-    checks/TemplateParameterCheck.cpp
-    checks/VariableNameCheck.cpp
+    company_module.cpp
+    checks/boolean_variable_check.cpp
+    checks/class_name_check.cpp
+    checks/constructor_init_list_check.cpp
+    checks/enum_name_check.cpp
+    checks/enum_value_check.cpp
+    checks/file_naming_check.cpp
+    checks/function_name_check.cpp
+    checks/include_order_check.cpp
+    checks/member_variable_check.cpp
+    checks/namespace_name_check.cpp
+    checks/no_using_namespace_std_check.cpp
+    checks/struct_name_check.cpp
+    checks/template_parameter_check.cpp
+    checks/variable_name_check.cpp
 
     PLUGIN_TOOL
     clang-tidy

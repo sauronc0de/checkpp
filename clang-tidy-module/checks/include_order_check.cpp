@@ -1,4 +1,4 @@
-#include "IncludeOrderCheck.hpp"
+#include "include_order_check.hpp"
 #include <clang/Lex/Preprocessor.h>
 #include <memory>
 

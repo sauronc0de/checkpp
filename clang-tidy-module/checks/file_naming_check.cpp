@@ -1,5 +1,5 @@
-#include "FileNamingCheck.hpp"
-#include "Common.hpp"
+#include "file_naming_check.hpp"
+#include "common.hpp"
 #include <clang/ASTMatchers/ASTMatchFinder.h>
 #include <filesystem>
 using namespace clang::ast_matchers;

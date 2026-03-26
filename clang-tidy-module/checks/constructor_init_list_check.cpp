@@ -1,4 +1,4 @@
-#include "ConstructorInitListCheck.hpp"
+#include "constructor_init_list_check.hpp"
 #include <clang/AST/Stmt.h>
 #include <clang/ASTMatchers/ASTMatchFinder.h>
 using namespace clang::ast_matchers;

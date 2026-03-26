@@ -26,7 +26,7 @@ You also need `yaml-cpp` installed.
 ## Run
 
 ```bash
-./build/cpp-style-tool /path/to/project /path/to/compile_commands_dir ./config/rules.yaml
+./build/checkpp /path/to/project /path/to/compile_commands_dir ./config/rules.yaml
 ```
 
 ## Example output

@@ -6,7 +6,7 @@ if [ "$#" -lt 2 ]; then
   echo "Examples:"
   echo "  $0 all release"
   echo "  $0 all develop"
-  echo "  $0 cpp-style-tool develop"
+  echo "  $0 checkpp develop"
   exit 1
 fi
 

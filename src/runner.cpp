@@ -9,6 +9,7 @@
 #include <regex>
 #include <sstream>
 #include <unordered_set>
+#include <set>
 
 namespace fs = std::filesystem;
 
@@ -244,10 +245,35 @@ void Runner::printFindings(const std::vector<Finding> &findings,
   std::cout << "  " << g_kYellow << "Warnings: " << warnings << g_kReset << "\n";
   std::cout << "  " << g_kBlue << "Infos:    " << infos << g_kReset << "\n";
 
+  std::unordered_set<std::string> parsedFiles;
+  for(const auto &finding : findings)
+  {
+    parsedFiles.insert(finding.path_.lexically_normal().generic_string());
+  }
+
   std::cout << g_kBold << "Checked files" << g_kReset << "\n";
   for(const auto &file : checkedFiles)
   {
     std::cout << "  " << file.string() << "\n";
+  }
+
+  std::vector<std::string> noFindingFiles;
+  for(const auto &file : checkedFiles)
+  {
+    const std::string kFile = file.lexically_normal().generic_string();
+    if(parsedFiles.count(kFile) == 0)
+    {
+      noFindingFiles.push_back(kFile);
+    }
+  }
+
+  if(!noFindingFiles.empty())
+  {
+    std::cout << g_kBold << "Files without findings" << g_kReset << "\n";
+    for(const auto &file : noFindingFiles)
+    {
+      std::cout << "  " << file << "\n";
+    }
   }
 }
 

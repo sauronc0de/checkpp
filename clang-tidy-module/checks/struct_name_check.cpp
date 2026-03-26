@@ -1,5 +1,5 @@
-#include "StructNameCheck.hpp"
-#include "Common.hpp"
+#include "struct_name_check.hpp"
+#include "common.hpp"
 #include <clang/ASTMatchers/ASTMatchFinder.h>
 using namespace clang::ast_matchers;
 void StructNameCheck::registerMatchers(MatchFinder* finder) {
@@ -8,8 +8,8 @@ void StructNameCheck::registerMatchers(MatchFinder* finder) {
 void StructNameCheck::check(const MatchFinder::MatchResult& result) {
     const auto* decl = result.Nodes.getNodeAs<clang::CXXRecordDecl>("decl");
     if (!decl) return;
-    const std::string name = decl->getNameAsString();
-    if (!name.empty() && !isPascalCase(name)) {
-        diag(decl->getLocation(), "Rule 3.1: struct '%0' should use PascalCase") << name;
+    const std::string kName = decl->getNameAsString();
+    if (!kName.empty() && !isPascalCase(kName)) {
+        diag(decl->getLocation(), "Rule 3.1: struct '%0' should use PascalCase") << kName;
     }
 }

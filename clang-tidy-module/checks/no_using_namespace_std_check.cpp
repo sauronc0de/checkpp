@@ -1,4 +1,4 @@
-#include "NoUsingNamespaceStdCheck.hpp"
+#include "no_using_namespace_std_check.hpp"
 #include <clang/ASTMatchers/ASTMatchFinder.h>
 using namespace clang::ast_matchers;
 void NoUsingNamespaceStdCheck::registerMatchers(MatchFinder* finder) {
