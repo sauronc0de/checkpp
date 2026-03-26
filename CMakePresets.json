@@ -29,7 +29,8 @@
                 "BUILD_SHARED_LIBS": "OFF",
                 "CMAKE_POSITION_INDEPENDENT_CODE": "OFF",
                 "CHECKPP_STRIP_SYMBOLS": "ON",
-                "CHECKPP_LTO": "ON"
+                "CHECKPP_LTO": "ON",
+                "CHECKPP_EMBED_CLANG_TIDY_MODULE": "ON"
             }
         },
         {

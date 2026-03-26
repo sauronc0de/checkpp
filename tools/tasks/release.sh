@@ -269,7 +269,7 @@ if [ ! -f "$PLUGIN_PATH" ]; then
 fi
 
 log "Running checker validation"
-if ! run_logged "$CHECKER_LOG" "$CHECKPP_BIN" "$PROJECT_ROOT" "$BUILD_DIR" "$RULES_PATH" "$PLUGIN_PATH"; then
+if ! run_logged "$CHECKER_LOG" "$CHECKPP_BIN" "$PROJECT_ROOT" "$BUILD_DIR" "$RULES_PATH"; then
   die "Checker execution failed (see ${CHECKER_LOG})"
 fi
 verify_checker_output "$CHECKER_LOG" || die "Checker reported warnings or errors (see ${CHECKER_LOG})"

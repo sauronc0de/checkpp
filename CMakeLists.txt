@@ -3,6 +3,7 @@ project(cpp_style_tool VERSION 0.0.0 LANGUAGES C CXX)
 
 option(CHECKPP_STRIP_SYMBOLS "Strip symbols from executable" OFF)
 option(CHECKPP_LTO "Enable Link-Time Optimization" OFF)
+option(CHECKPP_EMBED_CLANG_TIDY_MODULE "Embed the clang-tidy module into the executable" OFF)
 option(CHECKPP_ENABLE_SANITIZERS "Enable address/undefined sanitizers" OFF)
 option(CHECKPP_WARNINGS_AS_ERRORS "Treat warnings as errors" OFF)
 option(CHECKPP_ENABLE_COVERAGE "Enable code coverage" OFF)
@@ -39,6 +40,7 @@ endif()
 find_package(LLVM REQUIRED CONFIG)
 find_package(Clang REQUIRED CONFIG)
 find_package(yaml-cpp REQUIRED)
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
 
 list(APPEND CMAKE_MODULE_PATH "${LLVM_CMAKE_DIR}")
 list(APPEND CMAKE_MODULE_PATH "${CLANG_CMAKE_DIR}")
@@ -52,10 +54,28 @@ add_subdirectory(clang-tidy-module)
 add_executable(checkpp
     src/main.cpp
     src/config.cpp
+    src/embedded_clang_tidy_module.cpp
     src/runner.cpp
 )
 
-target_include_directories(checkpp PRIVATE include)
+target_include_directories(checkpp PRIVATE include ${CMAKE_CURRENT_BINARY_DIR})
+
+if(CHECKPP_EMBED_CLANG_TIDY_MODULE)
+    target_compile_definitions(checkpp PRIVATE CHECKPP_EMBED_CLANG_TIDY_MODULE)
+    set(CHECKPP_EMBEDDED_CLANG_TIDY_MODULE_DATA ${CMAKE_CURRENT_BINARY_DIR}/embedded_clang_tidy_module_data.inc)
+    add_custom_command(
+        OUTPUT ${CHECKPP_EMBEDDED_CLANG_TIDY_MODULE_DATA}
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/cmake/embed_binary_to_cpp.py
+                --input $<TARGET_FILE:CompanyClangTidyModule>
+                --output ${CHECKPP_EMBEDDED_CLANG_TIDY_MODULE_DATA}
+                --namespace checkpp::embedded_clang_tidy_module
+                --data-name kEmbeddedClangTidyModule
+        DEPENDS CompanyClangTidyModule ${CMAKE_CURRENT_SOURCE_DIR}/cmake/embed_binary_to_cpp.py
+        VERBATIM
+    )
+    add_custom_target(checkpp_embedded_clang_tidy_module DEPENDS ${CHECKPP_EMBEDDED_CLANG_TIDY_MODULE_DATA})
+    add_dependencies(checkpp checkpp_embedded_clang_tidy_module)
+endif()
 
 if(TARGET yaml-cpp::yaml-cpp)
     set(YAML_CPP_TARGET yaml-cpp::yaml-cpp)

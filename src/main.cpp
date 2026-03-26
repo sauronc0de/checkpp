@@ -1,4 +1,5 @@
 #include "config.hpp"
+#include "embedded_clang_tidy_module.hpp"
 #include "runner.hpp"
 
 #include <filesystem>
@@ -17,9 +18,7 @@ int main(int argc, char **argv)
   const fs::path kProjectRoot = argv[1];
   const fs::path kCompileDbDir = argv[2];
   const fs::path kRulesPath = argv[3];
-  const fs::path kPluginPath = (argc >= 5)
-                                   ? fs::path(argv[4])
-                                   : fs::path("./build/clang-tidy-module/libCompanyClangTidyModule.so");
+  const fs::path kPluginPath = (argc >= 5) ? fs::path(argv[4]) : defaultPluginPath();
 
   Config config;
   if(!config.loadFromFile(kRulesPath.string()))
