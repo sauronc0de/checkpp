@@ -25,6 +25,7 @@ RUN set -eux; \
     sudo \
     curl \
     git \
+    gh \
     tar \
     xutils-dev \
     build-essential \
