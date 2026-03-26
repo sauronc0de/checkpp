@@ -8,8 +8,8 @@
 #include <sys/wait.h>
 #include <regex>
 #include <sstream>
+#include <unordered_map>
 #include <unordered_set>
-#include <set>
 
 namespace fs = std::filesystem;
 
@@ -217,6 +217,12 @@ void Runner::printFindings(const std::vector<Finding> &findings,
   int warnings = 0;
   int infos = 0;
 
+  std::unordered_map<std::string, std::vector<const Finding *>> findingsByFile;
+  for(const auto &finding : findings)
+  {
+    findingsByFile[finding.path_.lexically_normal().generic_string()].push_back(&finding);
+  }
+
   for(const auto &f : findings)
   {
     if(f.severity_ == Severity::Error)
@@ -245,32 +251,50 @@ void Runner::printFindings(const std::vector<Finding> &findings,
   std::cout << "  " << g_kYellow << "Warnings: " << warnings << g_kReset << "\n";
   std::cout << "  " << g_kBlue << "Infos:    " << infos << g_kReset << "\n";
 
-  std::unordered_set<std::string> parsedFiles;
-  for(const auto &finding : findings)
-  {
-    parsedFiles.insert(finding.path_.lexically_normal().generic_string());
-  }
-
-  std::cout << g_kBold << "Checked files" << g_kReset << "\n";
-  for(const auto &file : checkedFiles)
-  {
-    std::cout << "  " << file.string() << "\n";
-  }
-
-  std::vector<std::string> noFindingFiles;
+  std::vector<std::string> filesWithFindings;
+  std::vector<std::string> filesWithoutFindings;
   for(const auto &file : checkedFiles)
   {
     const std::string kFile = file.lexically_normal().generic_string();
-    if(parsedFiles.count(kFile) == 0)
+    if(findingsByFile.count(kFile) > 0)
     {
-      noFindingFiles.push_back(kFile);
+      filesWithFindings.push_back(kFile);
+    }
+    else
+    {
+      filesWithoutFindings.push_back(kFile);
     }
   }
 
-  if(!noFindingFiles.empty())
+  if(!filesWithFindings.empty())
+  {
+    std::cout << g_kBold << "Files with findings" << g_kReset << "\n";
+    for(const auto &file : filesWithFindings)
+    {
+      std::cout << "  " << file << "\n";
+      for(const Finding *finding : findingsByFile[file])
+      {
+        const char *color = colorForSeverity(finding->severity_);
+        std::cout << "    " << color << g_kBold
+                  << "[" << toString(finding->severity_) << "]"
+                  << g_kReset << "  ";
+
+        std::cout << g_kBold
+                  << "Rule " << (finding->ruleId_.empty() ? "?" : finding->ruleId_)
+                  << g_kReset << "  ";
+
+        std::cout << color << finding->checkName_ << g_kReset << "\n";
+        std::cout << "      " << finding->line_ << ":" << finding->column_ << "\n";
+        std::cout << "      " << finding->message_ << "\n";
+      }
+      std::cout << "\n";
+    }
+  }
+
+  if(!filesWithoutFindings.empty())
   {
     std::cout << g_kBold << "Files without findings" << g_kReset << "\n";
-    for(const auto &file : noFindingFiles)
+    for(const auto &file : filesWithoutFindings)
     {
       std::cout << "  " << file << "\n";
     }
