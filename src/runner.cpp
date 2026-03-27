@@ -117,9 +117,13 @@ std::vector<fs::path> Runner::collectFiles(const fs::path &root) const
 
 std::string Runner::buildChecksArgument() const
 {
-  const auto kChecks = config_.enabledChecks();
   std::ostringstream oss;
   oss << "-*";
+  for(const auto &check : config_.clangTidyChecks())
+  {
+    oss << "," << check;
+  }
+  const auto kChecks = config_.enabledChecks();
   for(const auto &check : kChecks)
   {
     oss << "," << check;

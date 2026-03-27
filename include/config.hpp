@@ -17,10 +17,12 @@ class Config
 public:
   bool loadFromFile(const std::string &path, const std::string &ignorePathsPath = {});
   RuleSetting getRule(const std::string &checkName) const;
+  const std::vector<std::string> &clangTidyChecks() const;
   std::vector<std::string> enabledChecks() const;
   const std::vector<std::string> &ignoredPathFilters() const;
 
 private:
+  std::vector<std::string> clangTidyChecks_;
   std::vector<std::string> ignoredPathFilters_;
   std::unordered_map<std::string, RuleSetting> rules_;
 };

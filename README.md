@@ -61,6 +61,10 @@ You can pass `--ignore-paths` without `--plugin`.
 
 The rule set is required. Use [`rules.yaml`](config/rules.yaml) as a reference for the expected format, then pass your own file as the third CLI argument.
 
+You can also add `clang_tidy_checks:` to that YAML file to enable standard `clang-tidy` checks directly.
+
+The bundled rules file already enables the standard Google `clang-tidy` checks.
+
 The ignore list is optional. Use [`ignore_paths.txt`](config/ignore_paths.txt) as a reference, then pass your own file with `--ignore-paths` only when you want path filtering.
 
 ## Highlights

@@ -1,4 +1,8 @@
+clang_tidy_checks:
+  - google-*
+
 checks:
+  
   company-file-snake-case:
     rule_id: "1.1"
     enabled: true

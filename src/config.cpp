@@ -22,25 +22,55 @@ std::string trim(const std::string &value)
 bool Config::loadFromFile(const std::string &path, const std::string &ignorePathsPath)
 {
   YAML::Node root = YAML::LoadFile(path);
-  if(!root["checks"])
+  if(!root["checks"] && !root["clang_tidy_checks"])
   {
     return false;
   }
 
-  for(const auto &item : root["checks"])
+  rules_.clear();
+  clangTidyChecks_.clear();
+  ignoredPathFilters_.clear();
+
+  if(root["clang_tidy_checks"])
   {
-    const std::string kCheckName = item.first.as<std::string>();
-    const YAML::Node kNode = item.second;
-
-    RuleSetting setting;
-    if(kNode["rule_id"]) setting.ruleId_ = kNode["rule_id"].as<std::string>();
-    if(kNode["enabled"]) setting.enabled_ = kNode["enabled"].as<bool>();
-    if(kNode["severity"]) setting.severity_ = severityFromString(kNode["severity"].as<std::string>());
-
-    rules_[kCheckName] = setting;
+    const YAML::Node kChecksNode = root["clang_tidy_checks"];
+    if(kChecksNode.IsScalar())
+    {
+      const std::string kCheck = trim(kChecksNode.as<std::string>());
+      if(!kCheck.empty())
+      {
+        clangTidyChecks_.push_back(kCheck);
+      }
+    }
+    else if(kChecksNode.IsSequence())
+    {
+      for(const auto &item : kChecksNode)
+      {
+        const std::string kCheck = trim(item.as<std::string>());
+        if(!kCheck.empty())
+        {
+          clangTidyChecks_.push_back(kCheck);
+        }
+      }
+    }
   }
 
-  ignoredPathFilters_.clear();
+  if(root["checks"])
+  {
+    for(const auto &item : root["checks"])
+    {
+      const std::string kCheckName = item.first.as<std::string>();
+      const YAML::Node kNode = item.second;
+
+      RuleSetting setting;
+      if(kNode["rule_id"]) setting.ruleId_ = kNode["rule_id"].as<std::string>();
+      if(kNode["enabled"]) setting.enabled_ = kNode["enabled"].as<bool>();
+      if(kNode["severity"]) setting.severity_ = severityFromString(kNode["severity"].as<std::string>());
+
+      rules_[kCheckName] = setting;
+    }
+  }
+
   if(!ignorePathsPath.empty())
   {
     const std::filesystem::path kIgnorePathsPath(ignorePathsPath);
@@ -62,6 +92,11 @@ bool Config::loadFromFile(const std::string &path, const std::string &ignorePath
   }
 
   return true;
+}
+
+const std::vector<std::string> &Config::clangTidyChecks() const
+{
+  return clangTidyChecks_;
 }
 
 RuleSetting Config::getRule(const std::string &checkName) const
