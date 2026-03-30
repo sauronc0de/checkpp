@@ -51,7 +51,7 @@ public:
   }
 };
 
-static tidy::ClangTidyModuleRegistry::Add<CompanyModule> g_X(
+tidy::ClangTidyModuleRegistry::Add<CompanyModule> g_X(
     "company-module", "Company naming and style checks.");
 } // namespace
 

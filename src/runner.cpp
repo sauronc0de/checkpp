@@ -37,11 +37,11 @@ std::string shellQuote(const std::string &s)
 
 std::optional<std::string> buildClangTidyConfigArgument(const Config &config)
 {
-  const RuleSetting rule = config.getRule("company-line-length");
-  if(!rule.maxLength_) { return std::nullopt; }
+  const RuleSetting kRule = config.getRule("company-line-length");
+  if(!kRule.maxLength_) { return std::nullopt; }
 
   std::ostringstream oss;
-  oss << "{CheckOptions: {company-line-length.MaxLength: " << *rule.maxLength_
+  oss << "{CheckOptions: {company-line-length.MaxLength: " << *kRule.maxLength_
       << "}}";
   return oss.str();
 }
