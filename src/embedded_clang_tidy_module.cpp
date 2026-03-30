@@ -18,12 +18,15 @@ namespace
 fs::path writeEmbeddedModuleToTempFile()
 {
   std::array<char, 256> kTemplate{};
-  std::snprintf(kTemplate.data(), kTemplate.size(), "%s/checkpp-embedded-XXXXXX", fs::temp_directory_path().c_str());
+  std::snprintf(kTemplate.data(), kTemplate.size(),
+                "%s/checkpp-embedded-XXXXXX",
+                fs::temp_directory_path().c_str());
 
   const int kFd = ::mkstemp(kTemplate.data());
   if(kFd == -1)
   {
-    throw std::runtime_error("failed to create embedded clang-tidy module file template");
+    throw std::runtime_error(
+        "failed to create embedded clang-tidy module file template");
   }
   ::close(kFd);
 
@@ -31,14 +34,21 @@ fs::path writeEmbeddedModuleToTempFile()
   std::ofstream out(kOutputPath, std::ios::binary);
   if(!out)
   {
-    throw std::runtime_error("failed to create embedded clang-tidy module file: " + kOutputPath.string());
+    throw std::runtime_error(
+        "failed to create embedded clang-tidy module file: " +
+        kOutputPath.string());
   }
 
-  out.write(reinterpret_cast<const char *>(checkpp::embedded_clang_tidy_module::kEmbeddedClangTidyModule),
-            static_cast<std::streamsize>(checkpp::embedded_clang_tidy_module::kEmbeddedClangTidyModuleSize));
+  const auto kEmbeddedModuleSize =
+      checkpp::embedded_clang_tidy_module::kEmbeddedClangTidyModuleSize;
+  out.write(reinterpret_cast<const char *>(
+                checkpp::embedded_clang_tidy_module::kEmbeddedClangTidyModule),
+            static_cast<std::streamsize>(kEmbeddedModuleSize));
   if(!out)
   {
-    throw std::runtime_error("failed to write embedded clang-tidy module file: " + kOutputPath.string());
+    throw std::runtime_error(
+        "failed to write embedded clang-tidy module file: " +
+        kOutputPath.string());
   }
 
   return kOutputPath;

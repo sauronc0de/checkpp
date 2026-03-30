@@ -7,11 +7,16 @@ namespace
 class IncludeOrderCallbacks : public clang::PPCallbacks
 {
 public:
-  explicit IncludeOrderCallbacks(std::vector<IncludeOrderCheck::IncludeEntry> &includes) : includes_(includes) {}
-  void InclusionDirective(clang::SourceLocation hashLoc,
-                          const clang::Token &, llvm::StringRef fileName, bool isAngled,
+  explicit IncludeOrderCallbacks(
+      std::vector<IncludeOrderCheck::IncludeEntry> &includes)
+      : includes_(includes)
+  {
+  }
+  void InclusionDirective(clang::SourceLocation hashLoc, const clang::Token &,
+                          llvm::StringRef fileName, bool isAngled,
                           clang::CharSourceRange, clang::OptionalFileEntryRef,
-                          llvm::StringRef, llvm::StringRef, const clang::Module *,
+                          llvm::StringRef, llvm::StringRef,
+                          const clang::Module *,
                           clang::SrcMgr::CharacteristicKind) override
   {
     const int kGroup = [&fileName, isAngled]() {
@@ -29,7 +34,9 @@ private:
 };
 } // namespace
 
-void IncludeOrderCheck::registerPPCallbacks(const clang::SourceManager &, clang::Preprocessor *pp, clang::Preprocessor *)
+void IncludeOrderCheck::registerPPCallbacks(const clang::SourceManager &,
+                                            clang::Preprocessor *pp,
+                                            clang::Preprocessor *)
 {
   pp->addPPCallbacks(std::make_unique<IncludeOrderCallbacks>(includes_));
 }
@@ -41,7 +48,8 @@ void IncludeOrderCheck::onEndOfTranslationUnit()
   {
     if(include.group_ < previousGroup)
     {
-      diag(include.loc_, "Rule 13.1: include order should be local, standard, third-party, project");
+      diag(include.loc_, "Rule 13.1: include order should be local, standard,"
+                         " third-party, project");
       break;
     }
     previousGroup = include.group_;

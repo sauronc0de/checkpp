@@ -63,7 +63,8 @@ The rule set is required. Use [`rules.yaml`](config/rules.yaml) as a reference f
 
 You can also add `clang_tidy_checks:` to that YAML file to enable standard `clang-tidy` checks directly.
 
-The bundled rules file already enables the standard Google `clang-tidy` checks.
+The bundled rules file already enables a common `clang-tidy` baseline.
+It also enables the custom `company-line-length` release check. Set its `max_length` field in `rules.yaml` to change the limit (defaults to 80 if omitted).
 
 The ignore list is optional. Use [`ignore_paths.txt`](config/ignore_paths.txt) as a reference, then pass your own file with `--ignore-paths` only when you want path filtering.
 

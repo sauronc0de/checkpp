@@ -25,13 +25,15 @@ public:
           const std::filesystem::path &pluginPath) const;
 
 private:
-  std::vector<std::filesystem::path> collectFiles(const std::filesystem::path &root) const;
+  std::vector<std::filesystem::path> collectFiles(
+      const std::filesystem::path &root) const;
   std::string buildChecksArgument() const;
   std::vector<Finding> runForFile(const std::filesystem::path &file,
                                   const std::filesystem::path &compileDbDir,
                                   const std::filesystem::path &pluginPath,
                                   bool &commandFailed) const;
-  void printFindings(const std::vector<Finding> &findings,
-                     const std::vector<std::filesystem::path> &checkedFiles) const;
+  void printFindings(
+      const std::vector<Finding> &findings,
+      const std::vector<std::filesystem::path> &checkedFiles) const;
   const Config &config_;
 };

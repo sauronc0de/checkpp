@@ -1,18 +1,33 @@
 #include "function_name_check.hpp"
 #include "common.hpp"
 #include <clang/ASTMatchers/ASTMatchFinder.h>
-using namespace clang::ast_matchers;
-void FunctionNameCheck::registerMatchers(MatchFinder *finder)
+
+namespace ast_matchers = clang::ast_matchers;
+
+void FunctionNameCheck::registerMatchers(ast_matchers::MatchFinder *finder)
 {
-  finder->addMatcher(functionDecl(unless(cxxConstructorDecl()), unless(cxxDestructorDecl()), unless(isImplicit()), unless(isMain()), unless(cxxMethodDecl(isOverride()))).bind("decl"), this);
+  finder->addMatcher(
+      ast_matchers::functionDecl(
+          ast_matchers::unless(ast_matchers::cxxConstructorDecl()),
+          ast_matchers::unless(ast_matchers::cxxDestructorDecl()),
+          ast_matchers::unless(ast_matchers::isImplicit()),
+          ast_matchers::unless(ast_matchers::isMain()),
+          ast_matchers::unless(
+              ast_matchers::cxxMethodDecl(ast_matchers::isOverride())))
+          .bind("decl"),
+      this);
 }
-void FunctionNameCheck::check(const MatchFinder::MatchResult &result)
+
+void FunctionNameCheck::check(
+    const ast_matchers::MatchFinder::MatchResult &result)
 {
   const auto *decl = result.Nodes.getNodeAs<clang::FunctionDecl>("decl");
-  if(!decl || decl->isOverloadedOperator()) return;
+  if(!decl || decl->isOverloadedOperator()) { return; }
+
   const std::string kName = decl->getNameAsString();
   if(!kName.empty() && !isCamelCase(kName))
   {
-    diag(decl->getLocation(), "Rule 5.1: function '%0' should use camelCase") << kName;
+    diag(decl->getLocation(), "Rule 5.1: function '%0' should use camelCase")
+        << kName;
   }
 }

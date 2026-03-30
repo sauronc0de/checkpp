@@ -8,6 +8,7 @@ add_library(CompanyClangTidyModule MODULE
     checks/file_naming_check.cpp
     checks/function_name_check.cpp
     checks/include_order_check.cpp
+    checks/line_length_check.cpp
     checks/member_variable_check.cpp
     checks/namespace_name_check.cpp
     checks/no_using_namespace_std_check.cpp

@@ -13,7 +13,9 @@ public:
     std::string name_;
     int group_ = 0;
   };
-  void registerPPCallbacks(const clang::SourceManager &sm, clang::Preprocessor *pp, clang::Preprocessor *moduleExpanderPP) override;
+  void registerPPCallbacks(const clang::SourceManager &sm,
+                           clang::Preprocessor *pp,
+                           clang::Preprocessor *moduleExpanderPP) override;
   void onEndOfTranslationUnit() override;
 
 private:

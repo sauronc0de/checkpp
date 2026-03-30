@@ -11,7 +11,9 @@ int main(int argc, char **argv)
 {
   if(argc < 4)
   {
-    std::cerr << "Usage: checkpp <project_root> <compile_commands_dir> <rules.yaml> [--plugin <plugin_path>] [--ignore-paths <ignore_paths.txt>]\n";
+    std::cerr
+        << "Usage: checkpp <project_root> <compile_commands_dir> <rules.yaml> "
+        << "[--plugin <plugin_path>] [--ignore-paths <ignore_paths.txt>]\n";
     return 1;
   }
 

@@ -1,8 +1,15 @@
 clang_tidy_checks:
-  - google-*
+  - -*
+  - clang-analyzer-*
+  - bugprone-*
+  - performance-*
+  - modernize-*
+  - readability-*
+  - -readability-magic-numbers
+  - -readability-identifier-naming
 
 checks:
-  
+
   company-file-snake-case:
     rule_id: "1.1"
     enabled: true
@@ -77,6 +84,12 @@ checks:
     rule_id: "14.1"
     enabled: true
     severity: error
+
+  company-line-length:
+    rule_id: "15.1"
+    enabled: true
+    severity: error
+    max_length: 80
 
   company-constructor-init-list:
     rule_id: "16.1"
