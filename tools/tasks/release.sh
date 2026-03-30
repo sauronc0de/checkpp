@@ -95,13 +95,13 @@ PY
 }
 
 prompt_release_type() {
-  if [ ! -t 0 ]; then
+  if [ ! -r /dev/tty ] || [ ! -w /dev/tty ]; then
     die "Interactive terminal required to choose patch, minor, or major"
   fi
 
   while true; do
-    printf 'Select release type [patch/minor/major]: '
-    IFS= read -r release_type || die "Failed to read release type"
+    printf 'Select release type [patch/minor/major]: ' > /dev/tty
+    IFS= read -r release_type < /dev/tty || die "Failed to read release type"
     case "$release_type" in
       patch|minor|major)
         printf '%s\n' "$release_type"
