@@ -13,6 +13,7 @@ Usage: $0
 
 Runs the strict release workflow.
 You will be prompted for patch, minor, or major.
+If no prompt is available, patch is used by default.
 EOF
 }
 
@@ -21,10 +22,21 @@ if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
   exit 0
 fi
 
-if [ "$#" -gt 0 ]; then
-  printf 'Unknown arguments.\n' >&2
+if [ "$#" -gt 1 ]; then
+  printf 'Too many arguments.\n' >&2
   usage >&2
   exit 1
+fi
+
+if [ "$#" -eq 1 ]; then
+  case "$1" in
+    patch|minor|major) ;;
+    *)
+      printf 'Unknown argument: %s\n' "$1" >&2
+      usage >&2
+      exit 1
+      ;;
+  esac
 fi
 
 die() {
@@ -95,14 +107,26 @@ PY
 }
 
 prompt_release_type() {
+  local release_type="${1:-}"
+
+  if [ -n "$release_type" ]; then
+    printf '%s\n' "$release_type"
+    return 0
+  fi
+
   if [ ! -r /dev/tty ] || [ ! -w /dev/tty ]; then
-    die "Interactive terminal required to choose patch, minor, or major"
+    printf '%s\n' "patch"
+    return 0
   fi
 
   while true; do
-    printf 'Select release type [patch/minor/major]: ' > /dev/tty
+    printf 'Select release type [patch/minor/major] (default: patch): ' > /dev/tty
     IFS= read -r release_type < /dev/tty || die "Failed to read release type"
     case "$release_type" in
+      "")
+        printf '%s\n' "patch"
+        return 0
+        ;;
       patch|minor|major)
         printf '%s\n' "$release_type"
         return 0
@@ -227,7 +251,7 @@ fi
 
 assert_clean_tree
 
-RELEASE_TYPE="$(prompt_release_type)"
+RELEASE_TYPE="$(prompt_release_type "${1:-}")"
 
 log "Pulling latest ${DEFAULT_BRANCH} from ${REMOTE}"
 git pull --ff-only "$REMOTE" "$DEFAULT_BRANCH"
