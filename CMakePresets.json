@@ -12,6 +12,10 @@
             "environment": {
                 "LLVM_DIR": "/usr/lib/llvm-18/lib/cmake/llvm",
                 "Clang_DIR": "/usr/lib/llvm-18/lib/cmake/clang"
+            },
+            "cacheVariables": {
+                "CMAKE_C_FLAGS": "-Wall -Wextra -Wconversion -Wshadow -Werror",
+                "CMAKE_CXX_FLAGS": "-Wall -Wextra -Wconversion -Wshadow -Werror"
             }
         },
         {
