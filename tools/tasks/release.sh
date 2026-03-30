@@ -167,7 +167,7 @@ else:
     raise SystemExit(f'invalid release type: {release_type}')
 
 new_version = f'{major}.{minor}.{patch}'
-path.write_text(pattern.sub(rf'\1{new_version}\5', text, count=1), encoding='utf-8')
+path.write_text(pattern.sub(lambda m: f'{m.group(1)}{new_version}{m.group(5)}', text, count=1), encoding='utf-8')
 print(new_version)
 PY
 }
