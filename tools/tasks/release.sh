@@ -6,6 +6,7 @@ PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 PRESET="release"
 REMOTE="origin"
 DEFAULT_BRANCH=""
+RELEASE_TOOL="${PROJECT_ROOT}/build/${PRESET}/checkpp-release-tool"
 
 usage() {
   cat <<EOF
@@ -182,7 +183,6 @@ if ! run_logged "$BUILD_LOG" cmake --build --preset "$PRESET" -j"$(nproc)"; then
 fi
 assert_no_warning_lines "$BUILD_LOG" || die "Warnings found during build (see ${BUILD_LOG})"
 
-RELEASE_TOOL="${BUILD_DIR}/checkpp-release-tool"
 if [ ! -x "$RELEASE_TOOL" ]; then
   die "Release helper not found: ${RELEASE_TOOL}"
 fi
