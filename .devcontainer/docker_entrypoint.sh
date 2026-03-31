@@ -14,5 +14,3 @@ sudo chown --no-dereference -R $(whoami):$(whoami) $WORKSPACE_DIR
 
 # Set executable permissions to all files within a relative path
 sudo chmod -R +x ./tools/tasks
-
-export SDL_VIDEODRIVER=x11

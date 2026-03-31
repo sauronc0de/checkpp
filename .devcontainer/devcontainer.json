@@ -15,7 +15,7 @@
     "source=${localEnv:HOME}/.local/share/opencode,target=/home/sauroncode/.local/share/opencode,type=bind",
     "source=${localEnv:HOME}/.config/opencode,target=/home/sauroncode/.config/opencode,type=bind"
   ],
-  "postStartCommand": "sudo chown -R sauroncode:sauroncode /workspaces/${localWorkspaceFolderBasename} && chmod +x .devcontainer/docker_entrypoint.sh && .devcontainer/docker_entrypoint.sh",
+  "postStartCommand": "sudo chown -R sauroncode /workspaces/${localWorkspaceFolderBasename} && chmod +x .devcontainer/docker_entrypoint.sh && .devcontainer/docker_entrypoint.sh",
   "customizations": {
     "vscode": {
       "extensions": [
