@@ -15,7 +15,7 @@ namespace fs = std::filesystem;
 
 namespace
 {
-fs::path writeEmbeddedModuleToTempFile()
+auto writeEmbeddedModuleToTempFile() -> fs::path
 {
   std::array<char, 256> kTemplate{};
   std::snprintf(kTemplate.data(), kTemplate.size(),
@@ -56,7 +56,7 @@ fs::path writeEmbeddedModuleToTempFile()
 } // namespace
 #endif
 
-fs::path defaultPluginPath()
+auto defaultPluginPath() -> fs::path
 {
 #ifdef CHECKPP_EMBED_CLANG_TIDY_MODULE
   return writeEmbeddedModuleToTempFile();

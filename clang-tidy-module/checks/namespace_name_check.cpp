@@ -4,7 +4,8 @@
 
 namespace ast_matchers = clang::ast_matchers;
 
-void NamespaceNameCheck::registerMatchers(ast_matchers::MatchFinder *finder)
+auto NamespaceNameCheck::registerMatchers(ast_matchers::MatchFinder *finder)
+    -> void
 {
   finder->addMatcher(ast_matchers::namespaceDecl(
                          ast_matchers::unless(ast_matchers::isAnonymous()))
@@ -12,11 +13,14 @@ void NamespaceNameCheck::registerMatchers(ast_matchers::MatchFinder *finder)
                      this);
 }
 
-void NamespaceNameCheck::check(
-    const ast_matchers::MatchFinder::MatchResult &result)
+auto NamespaceNameCheck::check(
+    const ast_matchers::MatchFinder::MatchResult &result) -> void
 {
   const auto *decl = result.Nodes.getNodeAs<clang::NamespaceDecl>("decl");
-  if(!decl) { return; }
+  if(decl == nullptr)
+  {
+    return;
+  }
 
   const std::string kName = decl->getNameAsString();
   if(!kName.empty() && !isSnakeCase(kName))

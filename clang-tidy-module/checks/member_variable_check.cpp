@@ -4,7 +4,8 @@
 
 namespace ast_matchers = clang::ast_matchers;
 
-void MemberVariableCheck::registerMatchers(ast_matchers::MatchFinder *finder)
+auto MemberVariableCheck::registerMatchers(ast_matchers::MatchFinder *finder)
+    -> void
 {
   finder->addMatcher(
       ast_matchers::fieldDecl(ast_matchers::unless(ast_matchers::isImplicit()))
@@ -12,11 +13,14 @@ void MemberVariableCheck::registerMatchers(ast_matchers::MatchFinder *finder)
       this);
 }
 
-void MemberVariableCheck::check(
-    const ast_matchers::MatchFinder::MatchResult &result)
+auto MemberVariableCheck::check(
+    const ast_matchers::MatchFinder::MatchResult &result) -> void
 {
   const auto *decl = result.Nodes.getNodeAs<clang::FieldDecl>("decl");
-  if(!decl) { return; }
+  if(decl == nullptr)
+  {
+    return;
+  }
 
   const std::string kName = decl->getNameAsString();
   if(kName.empty() || kName.back() != '_')

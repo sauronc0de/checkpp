@@ -4,8 +4,8 @@
 
 namespace ast_matchers = clang::ast_matchers;
 
-void ConstructorInitListCheck::registerMatchers(
-    ast_matchers::MatchFinder *finder)
+auto ConstructorInitListCheck::registerMatchers(
+    ast_matchers::MatchFinder *finder) -> void
 {
   finder->addMatcher(ast_matchers::cxxConstructorDecl(
                          ast_matchers::isDefinition(),
@@ -14,22 +14,25 @@ void ConstructorInitListCheck::registerMatchers(
                      this);
 }
 
-void ConstructorInitListCheck::check(
-    const ast_matchers::MatchFinder::MatchResult &result)
+auto ConstructorInitListCheck::check(
+    const ast_matchers::MatchFinder::MatchResult &result) -> void
 {
   const auto *ctor = result.Nodes.getNodeAs<clang::CXXConstructorDecl>("ctor");
-  if(!ctor || ctor->getNumCtorInitializers() > 0 || !ctor->hasBody())
+  if(ctor == nullptr || ctor->getNumCtorInitializers() > 0 || !ctor->hasBody())
   {
     return;
   }
 
   const auto *body = llvm::dyn_cast<clang::CompoundStmt>(ctor->getBody());
-  if(!body) { return; }
+  if(body == nullptr)
+  {
+    return;
+  }
 
   for(const auto *stmt : body->body())
   {
     const auto *expr = llvm::dyn_cast<clang::BinaryOperator>(stmt);
-    if(expr && expr->isAssignmentOp())
+    if(expr != nullptr && expr->isAssignmentOp())
     {
       diag(ctor->getLocation(),
            "Rule 16.1: constructor '%0' may prefer an initializer list")

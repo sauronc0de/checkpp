@@ -6,7 +6,7 @@
 namespace ast_matchers = clang::ast_matchers;
 namespace
 {
-bool isKPascalCase(const std::string &name)
+auto isKPascalCase(const std::string &name) -> bool
 {
   return name.size() > 1 && name[0] == 'k' &&
          std::isupper(static_cast<unsigned char>(name[1])) &&
@@ -20,7 +20,8 @@ VariableNameCheck::VariableNameCheck(llvm::StringRef checkName,
 {
 }
 
-void VariableNameCheck::registerMatchers(ast_matchers::MatchFinder *finder)
+auto VariableNameCheck::registerMatchers(ast_matchers::MatchFinder *finder)
+    -> void
 {
   finder->addMatcher(
       ast_matchers::varDecl(ast_matchers::unless(ast_matchers::parmVarDecl()),
@@ -31,14 +32,20 @@ void VariableNameCheck::registerMatchers(ast_matchers::MatchFinder *finder)
       this);
 }
 
-void VariableNameCheck::check(
-    const ast_matchers::MatchFinder::MatchResult &result)
+auto VariableNameCheck::check(
+    const ast_matchers::MatchFinder::MatchResult &result) -> void
 {
   const auto *decl = result.Nodes.getNodeAs<clang::VarDecl>("decl");
-  if(!decl || decl->isStaticDataMember()) { return; }
+  if(decl == nullptr || decl->isStaticDataMember())
+  {
+    return;
+  }
 
   const std::string kName = decl->getNameAsString();
-  if(kName.empty()) { return; }
+  if(kName.empty())
+  {
+    return;
+  }
 
   bool isConstantRule = checkName_ == "company-constant-k-prefix";
   bool isGlobalRule = checkName_ == "company-global-g-prefix";
@@ -59,7 +66,7 @@ void VariableNameCheck::check(
 
   if(isGlobalRule)
   {
-    if(isGlobal && !isConstant && kName.rfind("g_", 0) != 0)
+    if(isGlobal && !isConstant && kName.compare(0, 2, "g_") != 0)
     {
       diag(decl->getLocation(),
            "Rule 9.1: global variable '%0' should use g_ prefix")

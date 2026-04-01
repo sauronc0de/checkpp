@@ -20,20 +20,25 @@ class Runner
 {
 public:
   explicit Runner(const Config &config);
-  int run(const std::filesystem::path &projectRoot,
-          const std::filesystem::path &compileDbDir,
-          const std::filesystem::path &pluginPath) const;
+  auto run(const std::filesystem::path &projectRoot,
+           const std::filesystem::path &compileDbDir,
+           const std::filesystem::path &pluginPath) const -> int;
 
 private:
-  std::vector<std::filesystem::path> collectFiles(
-      const std::filesystem::path &root) const;
-  std::string buildChecksArgument() const;
-  std::vector<Finding> runForFile(const std::filesystem::path &file,
-                                  const std::filesystem::path &compileDbDir,
-                                  const std::filesystem::path &pluginPath,
-                                  bool &commandFailed) const;
-  void printFindings(
+  [[nodiscard]] auto collectFiles(const std::filesystem::path &root) const
+      -> std::vector<std::filesystem::path>;
+  [[nodiscard]] auto buildChecksArgument() const -> std::string;
+  struct RunPaths
+  {
+    std::filesystem::path compileDbDir_;
+    std::filesystem::path pluginPath_;
+  };
+  [[nodiscard]] auto runForFile(const std::filesystem::path &file,
+                                const RunPaths &paths,
+                                bool &commandFailed) const
+      -> std::vector<Finding>;
+  static auto printFindings(
       const std::vector<Finding> &findings,
-      const std::vector<std::filesystem::path> &checkedFiles) const;
+      const std::vector<std::filesystem::path> &checkedFiles) -> void;
   const Config &config_;
 };

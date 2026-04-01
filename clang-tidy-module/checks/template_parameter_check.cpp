@@ -4,21 +4,26 @@
 
 namespace ast_matchers = clang::ast_matchers;
 
-void TemplateParameterCheck::registerMatchers(ast_matchers::MatchFinder *finder)
+auto TemplateParameterCheck::registerMatchers(ast_matchers::MatchFinder *finder)
+    -> void
 {
   finder->addMatcher(ast_matchers::templateTypeParmDecl().bind("decl"), this);
 }
 
-void TemplateParameterCheck::check(
-    const ast_matchers::MatchFinder::MatchResult &result)
+auto TemplateParameterCheck::check(
+    const ast_matchers::MatchFinder::MatchResult &result) -> void
 {
-  const auto *ttp = result.Nodes.getNodeAs<clang::TemplateTypeParmDecl>("decl");
-  if(!ttp) { return; }
+  const auto *templateParameter =
+      result.Nodes.getNodeAs<clang::TemplateTypeParmDecl>("decl");
+  if(templateParameter == nullptr)
+  {
+    return;
+  }
 
-  const std::string kName = ttp->getNameAsString();
+  const std::string kName = templateParameter->getNameAsString();
   if(!kName.empty() && !isPascalCase(kName))
   {
-    diag(ttp->getLocation(),
+    diag(templateParameter->getLocation(),
          "Rule 11.1: template parameter '%0' should use PascalCase")
         << kName;
   }

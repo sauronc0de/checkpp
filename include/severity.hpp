@@ -1,32 +1,49 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
 
-enum class Severity
+enum class Severity : std::uint8_t
 {
-    Info,
-    Warning,
-    Error,
-    Hidden
+  Info,
+  Warning,
+  Error,
+  Hidden
 };
 
-inline std::string toString(Severity s)
+inline auto toString(Severity severity) -> std::string
 {
-    switch (s)
-    {
-        case Severity::Info: return "INFO";
-        case Severity::Warning: return "WARNING";
-        case Severity::Error: return "ERROR";
-        case Severity::Hidden: return "HIDDEN";
-    }
+  switch(severity)
+  {
+  case Severity::Info:
+    return "INFO";
+  case Severity::Warning:
     return "WARNING";
+  case Severity::Error:
+    return "ERROR";
+  case Severity::Hidden:
+    return "HIDDEN";
+  }
+  return "WARNING";
 }
 
-inline Severity severityFromString(const std::string& value)
+inline auto severityFromString(const std::string &value) -> Severity
 {
-    if (value == "info") return Severity::Info;
-    if (value == "warning") return Severity::Warning;
-    if (value == "error") return Severity::Error;
-    if (value == "hidden") return Severity::Hidden;
+  if(value == "info")
+  {
+    return Severity::Info;
+  }
+  if(value == "warning")
+  {
     return Severity::Warning;
+  }
+  if(value == "error")
+  {
+    return Severity::Error;
+  }
+  if(value == "hidden")
+  {
+    return Severity::Hidden;
+  }
+  return Severity::Warning;
 }

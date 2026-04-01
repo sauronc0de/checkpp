@@ -7,31 +7,41 @@
 
 namespace ast_matchers = clang::ast_matchers;
 
-void LineLengthCheck::registerMatchers(ast_matchers::MatchFinder *finder)
+auto LineLengthCheck::registerMatchers(ast_matchers::MatchFinder *finder)
+    -> void
 {
   finder->addMatcher(ast_matchers::translationUnitDecl().bind("tu"), this);
 }
 
-void LineLengthCheck::check(
-    const ast_matchers::MatchFinder::MatchResult &result)
+auto LineLengthCheck::check(
+    const ast_matchers::MatchFinder::MatchResult &result) -> void
 {
-  if(result.SourceManager) { sourceManager_ = result.SourceManager; }
+  if(result.SourceManager != nullptr)
+  {
+    sourceManager_ = result.SourceManager;
+  }
 }
 
-void LineLengthCheck::storeOptions(
-    clang::tidy::ClangTidyOptions::OptionMap &opts)
+auto LineLengthCheck::storeOptions(
+    clang::tidy::ClangTidyOptions::OptionMap &opts) -> void
 {
   Options.store(opts, "MaxLength", maxLength_);
 }
 
-void LineLengthCheck::onEndOfTranslationUnit()
+auto LineLengthCheck::onEndOfTranslationUnit() -> void
 {
-  if(!sourceManager_) return;
+  if(sourceManager_ == nullptr)
+  {
+    return;
+  }
 
   const clang::FileID kMainFileID = sourceManager_->getMainFileID();
   const std::optional<llvm::StringRef> kBuffer =
       sourceManager_->getBufferDataOrNone(kMainFileID);
-  if(!kBuffer) return;
+  if(!kBuffer)
+  {
+    return;
+  }
 
   const llvm::StringRef kContent = *kBuffer;
   std::size_t position = 0;
@@ -46,7 +56,7 @@ void LineLengthCheck::onEndOfTranslationUnit()
       ++lineEnd;
     }
 
-    const unsigned kLineLength = static_cast<unsigned>(lineEnd - position);
+    const auto kLineLength = static_cast<unsigned>(lineEnd - position);
     if(kLineLength > maxLength_)
     {
       const clang::SourceLocation kLoc =
@@ -63,8 +73,14 @@ void LineLengthCheck::onEndOfTranslationUnit()
     {
       position = lineEnd + 2;
     }
-    else if(lineEnd < kContent.size()) { position = lineEnd + 1; }
-    else { position = lineEnd; }
+    else if(lineEnd < kContent.size())
+    {
+      position = lineEnd + 1;
+    }
+    else
+    {
+      position = lineEnd;
+    }
 
     ++lineNumber;
   }

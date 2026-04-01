@@ -4,7 +4,8 @@
 
 namespace ast_matchers = clang::ast_matchers;
 
-void FunctionNameCheck::registerMatchers(ast_matchers::MatchFinder *finder)
+auto FunctionNameCheck::registerMatchers(ast_matchers::MatchFinder *finder)
+    -> void
 {
   finder->addMatcher(
       ast_matchers::functionDecl(
@@ -18,11 +19,14 @@ void FunctionNameCheck::registerMatchers(ast_matchers::MatchFinder *finder)
       this);
 }
 
-void FunctionNameCheck::check(
-    const ast_matchers::MatchFinder::MatchResult &result)
+auto FunctionNameCheck::check(
+    const ast_matchers::MatchFinder::MatchResult &result) -> void
 {
   const auto *decl = result.Nodes.getNodeAs<clang::FunctionDecl>("decl");
-  if(!decl || decl->isOverloadedOperator()) { return; }
+  if(decl == nullptr || decl->isOverloadedOperator())
+  {
+    return;
+  }
 
   const std::string kName = decl->getNameAsString();
   if(!kName.empty() && !isCamelCase(kName))

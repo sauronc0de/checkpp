@@ -2,4 +2,4 @@
 
 #include <filesystem>
 
-std::filesystem::path defaultPluginPath();
+auto defaultPluginPath() -> std::filesystem::path;

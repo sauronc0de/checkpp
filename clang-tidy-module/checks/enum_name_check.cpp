@@ -4,16 +4,20 @@
 
 namespace ast_matchers = clang::ast_matchers;
 
-void EnumNameCheck::registerMatchers(ast_matchers::MatchFinder *finder)
+auto EnumNameCheck::registerMatchers(ast_matchers::MatchFinder *finder) -> void
 {
   finder->addMatcher(
       ast_matchers::enumDecl(ast_matchers::isDefinition()).bind("decl"), this);
 }
 
-void EnumNameCheck::check(const ast_matchers::MatchFinder::MatchResult &result)
+auto EnumNameCheck::check(const ast_matchers::MatchFinder::MatchResult &result)
+    -> void
 {
   const auto *decl = result.Nodes.getNodeAs<clang::EnumDecl>("decl");
-  if(!decl || decl->getIdentifier() == nullptr) { return; }
+  if(decl == nullptr || decl->getIdentifier() == nullptr)
+  {
+    return;
+  }
 
   const std::string kName = decl->getNameAsString();
   if(!kName.empty() && !isPascalCase(kName))

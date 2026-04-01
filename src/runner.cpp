@@ -9,6 +9,7 @@
 #include <sys/wait.h>
 #include <regex>
 #include <sstream>
+#include <ranges>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -23,22 +24,32 @@ const char *g_kYellow = "\033[33m";
 const char *g_kBlue = "\033[34m";
 const char *g_kGray = "\033[90m";
 
-std::string shellQuote(const std::string &s)
+auto shellQuote(const std::string &input) -> std::string
 {
   std::string out = "'";
-  for(char c : s)
+  for(char character : input)
   {
-    if(c == '\'') { out += "'\\''"; }
-    else { out += c; }
+    if(character == '\'')
+    {
+      out += "'\\''";
+    }
+    else
+    {
+      out += character;
+    }
   }
   out += "'";
   return out;
 }
 
-std::optional<std::string> buildClangTidyConfigArgument(const Config &config)
+auto buildClangTidyConfigArgument(const Config &config)
+    -> std::optional<std::string>
 {
   const RuleSetting kRule = config.getRule("company-line-length");
-  if(!kRule.maxLength_) { return std::nullopt; }
+  if(!kRule.maxLength_)
+  {
+    return std::nullopt;
+  }
 
   std::ostringstream oss;
   oss << "{CheckOptions: {company-line-length.MaxLength: " << *kRule.maxLength_
@@ -46,32 +57,29 @@ std::optional<std::string> buildClangTidyConfigArgument(const Config &config)
   return oss.str();
 }
 
-bool isSourceFile(const fs::path &path)
+auto isSourceFile(const fs::path &path) -> bool
 {
   static const std::unordered_set<std::string> kExts = {
       ".c", ".cc", ".cpp", ".cxx", ".h", ".hh", ".hpp"};
-  return kExts.count(path.extension().string()) > 0;
+  return kExts.contains(path.extension().string());
 }
 
-bool shouldIgnorePath(const fs::path &path,
+auto shouldIgnorePath(const fs::path &path,
                       const std::vector<std::string> &ignoredPathFilters)
+    -> bool
 {
   const std::string kNormalizedPath = path.lexically_normal().generic_string();
-  for(const std::string &ignoredPathFilter : ignoredPathFilters)
-  {
-    if(!ignoredPathFilter.empty() &&
-       kNormalizedPath.find(ignoredPathFilter) != std::string::npos)
-    {
-      return true;
-    }
-  }
-
-  return false;
+  return std::ranges::any_of(
+      ignoredPathFilters,
+      [&kNormalizedPath](const std::string &ignoredPathFilter) {
+        return !ignoredPathFilter.empty() &&
+               kNormalizedPath.find(ignoredPathFilter) != std::string::npos;
+      });
 }
 
-const char *colorForSeverity(Severity s)
+auto colorForSeverity(Severity severity) -> const char *
 {
-  switch(s)
+  switch(severity)
   {
   case Severity::Error:
     return g_kRed;
@@ -88,7 +96,7 @@ const char *colorForSeverity(Severity s)
 
 Runner::Runner(const Config &config) : config_(config) {}
 
-std::vector<fs::path> Runner::collectFiles(const fs::path &root) const
+auto Runner::collectFiles(const fs::path &root) const -> std::vector<fs::path>
 {
   std::vector<fs::path> kFiles;
   fs::recursive_directory_iterator iterator(root);
@@ -121,7 +129,7 @@ std::vector<fs::path> Runner::collectFiles(const fs::path &root) const
   return kFiles;
 }
 
-std::string Runner::buildChecksArgument() const
+auto Runner::buildChecksArgument() const -> std::string
 {
   std::ostringstream oss;
   oss << "-*";
@@ -131,10 +139,8 @@ std::string Runner::buildChecksArgument() const
   return oss.str();
 }
 
-std::vector<Finding> Runner::runForFile(const fs::path &file,
-                                        const fs::path &compileDbDir,
-                                        const fs::path &pluginPath,
-                                        bool &isCommandFailed) const
+auto Runner::runForFile(const fs::path &file, const RunPaths &paths,
+                        bool &isCommandFailed) const -> std::vector<Finding>
 {
   std::vector<Finding> findings;
   isCommandFailed = false;
@@ -145,13 +151,19 @@ std::vector<Finding> Runner::runForFile(const fs::path &file,
   std::ostringstream cmd;
   cmd << "env ASAN_OPTIONS=verify_asan_link_order=0 clang-tidy "
       << shellQuote(file.string()) << " "
-      << "-p=" << shellQuote(compileDbDir.string()) << " "
+      << "-p=" << shellQuote(paths.compileDbDir_.string()) << " "
       << "-checks=" << shellQuote(kChecksArg) << " ";
-  if(kConfigArg) { cmd << "-config=" << shellQuote(*kConfigArg) << " "; }
-  cmd << "--load=" << shellQuote(pluginPath.string()) << " 2>&1";
+  if(kConfigArg)
+  {
+    cmd << "-config=" << shellQuote(*kConfigArg) << " ";
+  }
+  cmd << "--load=" << shellQuote(paths.pluginPath_.string()) << " 2>&1";
 
   FILE *pipe = popen(cmd.str().c_str(), "r");
-  if(pipe == nullptr) { return findings; }
+  if(pipe == nullptr)
+  {
+    return findings;
+  }
 
   std::array<char, 4096> buffer{};
   std::string output;
@@ -169,7 +181,10 @@ std::vector<Finding> Runner::runForFile(const fs::path &file,
   std::string line;
   while(std::getline(iss, line))
   {
-    if(!std::regex_match(line, match, kLinePattern)) { continue; }
+    if(!std::regex_match(line, match, kLinePattern))
+    {
+      continue;
+    }
 
     Finding finding;
     finding.path_ = match[1].str();
@@ -182,7 +197,10 @@ std::vector<Finding> Runner::runForFile(const fs::path &file,
     finding.ruleId_ = kRule.ruleId_;
     finding.severity_ = kRule.severity_;
 
-    if(!kRule.enabled_ || kRule.severity_ == Severity::Hidden) { continue; }
+    if(!kRule.enabled_ || kRule.severity_ == Severity::Hidden)
+    {
+      continue;
+    }
 
     findings.push_back(std::move(finding));
   }
@@ -207,8 +225,8 @@ std::vector<Finding> Runner::runForFile(const fs::path &file,
   return findings;
 }
 
-void Runner::printFindings(const std::vector<Finding> &findings,
-                           const std::vector<fs::path> &checkedFiles) const
+auto Runner::printFindings(const std::vector<Finding> &findings,
+                           const std::vector<fs::path> &checkedFiles) -> void
 {
   int errors = 0;
   int warnings = 0;
@@ -221,26 +239,27 @@ void Runner::printFindings(const std::vector<Finding> &findings,
         &finding);
   }
 
-  for(const auto &f : findings)
+  for(const auto &finding : findings)
   {
-    if(f.severity_ == Severity::Error)
+    if(finding.severity_ == Severity::Error)
       ++errors;
-    else if(f.severity_ == Severity::Warning)
+    else if(finding.severity_ == Severity::Warning)
       ++warnings;
-    else if(f.severity_ == Severity::Info)
+    else if(finding.severity_ == Severity::Info)
       ++infos;
 
-    const char *color = colorForSeverity(f.severity_);
-    std::cout << color << g_kBold << "[" << toString(f.severity_) << "]"
+    const char *color = colorForSeverity(finding.severity_);
+    std::cout << color << g_kBold << "[" << toString(finding.severity_) << "]"
               << g_kReset << "  ";
 
-    std::cout << g_kBold << "Rule " << (f.ruleId_.empty() ? "?" : f.ruleId_)
+    std::cout << g_kBold << "Rule "
+              << (finding.ruleId_.empty() ? "?" : finding.ruleId_)
               << g_kReset << "  ";
 
-    std::cout << color << f.checkName_ << g_kReset << "\n";
-    std::cout << "         " << f.path_.string() << ":" << f.line_ << ":"
-              << f.column_ << "\n";
-    std::cout << "         " << f.message_ << "\n\n";
+    std::cout << color << finding.checkName_ << g_kReset << "\n";
+    std::cout << "         " << finding.path_.string() << ":"
+              << finding.line_ << ":" << finding.column_ << "\n";
+    std::cout << "         " << finding.message_ << "\n\n";
   }
 
   std::cout << g_kBold << "Summary" << g_kReset << "\n";
@@ -254,8 +273,14 @@ void Runner::printFindings(const std::vector<Finding> &findings,
   for(const auto &file : checkedFiles)
   {
     const std::string kFile = file.lexically_normal().generic_string();
-    if(findingsByFile.count(kFile) > 0) { filesWithFindings.push_back(kFile); }
-    else { filesWithoutFindings.push_back(kFile); }
+    if(findingsByFile.contains(kFile))
+    {
+      filesWithFindings.push_back(kFile);
+    }
+    else
+    {
+      filesWithoutFindings.push_back(kFile);
+    }
   }
 
   if(!filesWithFindings.empty())
@@ -293,8 +318,8 @@ void Runner::printFindings(const std::vector<Finding> &findings,
   }
 }
 
-int Runner::run(const fs::path &projectRoot, const fs::path &compileDbDir,
-                const fs::path &pluginPath) const
+auto Runner::run(const fs::path &projectRoot, const fs::path &compileDbDir,
+                 const fs::path &pluginPath) const -> int
 {
   const auto kFiles = collectFiles(projectRoot);
   if(kFiles.empty())
@@ -311,7 +336,8 @@ int Runner::run(const fs::path &projectRoot, const fs::path &compileDbDir,
   {
     std::cout << "\r  " << file.string() << "                              "
               << std::flush;
-    auto current = runForFile(file, compileDbDir, pluginPath, isCommandFailed);
+    RunPaths runPaths{compileDbDir, pluginPath};
+    auto current = runForFile(file, runPaths, isCommandFailed);
     findings.insert(findings.end(), current.begin(), current.end());
     if(isCommandFailed)
     {
@@ -323,22 +349,26 @@ int Runner::run(const fs::path &projectRoot, const fs::path &compileDbDir,
   std::cout << "\r" << std::string(80, ' ') << "\r";
 
   std::sort(findings.begin(), findings.end(),
-            [](const Finding &a, const Finding &b) {
-              if(a.path_ != b.path_)
+            [](const Finding &lhs, const Finding &rhs) {
+              if(lhs.path_ != rhs.path_)
               {
-                return a.path_.string() < b.path_.string();
+                return lhs.path_.string() < rhs.path_.string();
               }
-              if(a.line_ != b.line_) { return a.line_ < b.line_; }
-              return a.column_ < b.column_;
+              if(lhs.line_ != rhs.line_)
+              {
+                return lhs.line_ < rhs.line_;
+              }
+              return lhs.column_ < rhs.column_;
             });
 
   printFindings(findings, kFiles);
 
   if(hasCommandFailure) { return 1; }
 
-  return std::any_of(
-             findings.begin(), findings.end(),
-             [](const Finding &f) { return f.severity_ == Severity::Error; })
+  return std::any_of(findings.begin(), findings.end(),
+                     [](const Finding &finding) {
+                       return finding.severity_ == Severity::Error;
+                     })
              ? 2
              : 0;
 }

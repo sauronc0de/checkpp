@@ -4,7 +4,8 @@
 
 namespace ast_matchers = clang::ast_matchers;
 
-void StructNameCheck::registerMatchers(ast_matchers::MatchFinder *finder)
+auto StructNameCheck::registerMatchers(ast_matchers::MatchFinder *finder)
+    -> void
 {
   finder->addMatcher(ast_matchers::cxxRecordDecl(
                          ast_matchers::isDefinition(), ast_matchers::isStruct(),
@@ -13,11 +14,14 @@ void StructNameCheck::registerMatchers(ast_matchers::MatchFinder *finder)
                      this);
 }
 
-void StructNameCheck::check(
-    const ast_matchers::MatchFinder::MatchResult &result)
+auto StructNameCheck::check(
+    const ast_matchers::MatchFinder::MatchResult &result) -> void
 {
   const auto *decl = result.Nodes.getNodeAs<clang::CXXRecordDecl>("decl");
-  if(!decl) { return; }
+  if(decl == nullptr)
+  {
+    return;
+  }
 
   const std::string kName = decl->getNameAsString();
   if(!kName.empty() && !isPascalCase(kName))

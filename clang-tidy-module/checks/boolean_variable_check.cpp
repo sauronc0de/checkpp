@@ -4,7 +4,8 @@
 
 namespace ast_matchers = clang::ast_matchers;
 
-void BooleanVariableCheck::registerMatchers(ast_matchers::MatchFinder *finder)
+auto BooleanVariableCheck::registerMatchers(ast_matchers::MatchFinder *finder)
+    -> void
 {
   finder->addMatcher(
       ast_matchers::varDecl(ast_matchers::hasType(ast_matchers::booleanType()),
@@ -13,11 +14,14 @@ void BooleanVariableCheck::registerMatchers(ast_matchers::MatchFinder *finder)
       this);
 }
 
-void BooleanVariableCheck::check(
-    const ast_matchers::MatchFinder::MatchResult &result)
+auto BooleanVariableCheck::check(
+    const ast_matchers::MatchFinder::MatchResult &result) -> void
 {
   const auto *decl = result.Nodes.getNodeAs<clang::VarDecl>("decl");
-  if(!decl) { return; }
+  if(decl == nullptr)
+  {
+    return;
+  }
 
   const std::string kName = decl->getNameAsString();
   if(!kName.empty() && !hasBooleanPrefix(kName))

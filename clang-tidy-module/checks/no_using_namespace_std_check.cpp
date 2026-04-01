@@ -3,17 +3,20 @@
 
 namespace ast_matchers = clang::ast_matchers;
 
-void NoUsingNamespaceStdCheck::registerMatchers(
-    ast_matchers::MatchFinder *finder)
+auto NoUsingNamespaceStdCheck::registerMatchers(
+    ast_matchers::MatchFinder *finder) -> void
 {
   finder->addMatcher(ast_matchers::usingDirectiveDecl().bind("decl"), this);
 }
 
-void NoUsingNamespaceStdCheck::check(
-    const ast_matchers::MatchFinder::MatchResult &result)
+auto NoUsingNamespaceStdCheck::check(
+    const ast_matchers::MatchFinder::MatchResult &result) -> void
 {
   const auto *decl = result.Nodes.getNodeAs<clang::UsingDirectiveDecl>("decl");
-  if(!decl || !decl->getNominatedNamespace()) { return; }
+  if(decl == nullptr || decl->getNominatedNamespace() == nullptr)
+  {
+    return;
+  }
 
   if(decl->getNominatedNamespace()->getNameAsString() == "std")
   {

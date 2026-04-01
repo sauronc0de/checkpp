@@ -5,26 +5,30 @@
 
 namespace ast_matchers = clang::ast_matchers;
 
-void FileNamingCheck::registerMatchers(ast_matchers::MatchFinder *finder)
+auto FileNamingCheck::registerMatchers(ast_matchers::MatchFinder *finder)
+    -> void
 {
   finder->addMatcher(ast_matchers::translationUnitDecl().bind("tu"), this);
 }
 
-void FileNamingCheck::check(
-    const ast_matchers::MatchFinder::MatchResult &result)
+auto FileNamingCheck::check(
+    const ast_matchers::MatchFinder::MatchResult &result) -> void
 {
   const auto *tu = result.Nodes.getNodeAs<clang::TranslationUnitDecl>("tu");
-  if(!tu || !result.SourceManager) { return; }
+  if(tu == nullptr || result.SourceManager == nullptr)
+  {
+    return;
+  }
 
   auto loc = result.SourceManager->getLocForStartOfFile(
       result.SourceManager->getMainFileID());
   const std::string kFullPath = result.SourceManager->getFilename(loc).str();
   if(kFullPath.empty()) { return; }
 
-  std::filesystem::path p(kFullPath);
-  if(!isSnakeCase(p.stem().string()))
+  std::filesystem::path filePath(kFullPath);
+  if(!isSnakeCase(filePath.stem().string()))
   {
     diag(loc, "Rule 1.1: file '%0' should use snake_case")
-        << p.filename().string();
+        << filePath.filename().string();
   }
 }

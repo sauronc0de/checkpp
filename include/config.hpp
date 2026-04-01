@@ -1,6 +1,7 @@
 #pragma once
 
 #include "severity.hpp"
+#include <filesystem>
 #include <optional>
 #include <string>
 #include <unordered_map>
@@ -17,12 +18,12 @@ struct RuleSetting
 class Config
 {
 public:
-  bool loadFromFile(const std::string &path,
-                    const std::string &ignorePathsPath = {});
-  RuleSetting getRule(const std::string &checkName) const;
-  const std::vector<std::string> &clangTidyChecks() const;
-  std::vector<std::string> enabledChecks() const;
-  const std::vector<std::string> &ignoredPathFilters() const;
+  auto loadFromFile(const std::string &path,
+                    std::filesystem::path ignorePathsPath = {}) -> bool;
+  auto getRule(const std::string &checkName) const -> RuleSetting;
+  auto clangTidyChecks() const -> const std::vector<std::string> &;
+  auto enabledChecks() const -> std::vector<std::string>;
+  auto ignoredPathFilters() const -> const std::vector<std::string> &;
 
 private:
   std::vector<std::string> clangTidyChecks_;

@@ -5,9 +5,10 @@ class VariableNameCheck : public clang::tidy::ClangTidyCheck
 public:
   VariableNameCheck(llvm::StringRef checkName,
                     clang::tidy::ClangTidyContext *context);
-  void registerMatchers(clang::ast_matchers::MatchFinder *finder) override;
-  void check(
-      const clang::ast_matchers::MatchFinder::MatchResult &result) override;
+  auto registerMatchers(clang::ast_matchers::MatchFinder *finder)
+      -> void override;
+  auto check(const clang::ast_matchers::MatchFinder::MatchResult &result)
+      -> void override;
 
 private:
   std::string checkName_;
