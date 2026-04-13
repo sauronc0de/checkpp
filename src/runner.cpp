@@ -2,8 +2,12 @@
 
 #include <algorithm>
 #include <array>
+#include <iomanip>
 #include <cstdio>
 #include <cstdlib>
+#include <thread>
+#include <mutex>
+#include <atomic>
 #include <iostream>
 #include <optional>
 #include <sys/wait.h>
@@ -57,11 +61,22 @@ auto buildClangTidyConfigArgument(const Config &config)
   return oss.str();
 }
 
-auto isSourceFile(const fs::path &path) -> bool
+auto isImplementationFile(const fs::path &path) -> bool
 {
-  static const std::unordered_set<std::string> kExts = {
-      ".c", ".cc", ".cpp", ".cxx", ".h", ".hh", ".hpp"};
+  static const std::unordered_set<std::string> kExts = {".c", ".cc", ".cpp",
+                                                        ".cxx"};
   return kExts.contains(path.extension().string());
+}
+
+auto isHeaderFile(const fs::path &path) -> bool
+{
+  static const std::unordered_set<std::string> kExts = {".h", ".hh", ".hpp"};
+  return kExts.contains(path.extension().string());
+}
+
+auto isCheckableFile(const fs::path &path) -> bool
+{
+  return isImplementationFile(path) || isHeaderFile(path);
 }
 
 auto shouldIgnorePath(const fs::path &path,
@@ -92,6 +107,21 @@ auto colorForSeverity(Severity severity) -> const char *
   }
   return g_kGray;
 }
+
+auto printProgress(std::size_t index, std::size_t total, const fs::path &file)
+    -> void
+{
+  const double kPercent = total == 0
+                              ? 100.0
+                              : (static_cast<double>(index) * 100.0) /
+                                    static_cast<double>(total);
+
+  std::ostringstream oss;
+  oss << '\r' << "\033[2K" << g_kBold << "Scanning files" << g_kReset << "  "
+      << "[" << index << "/" << total << "] " << std::fixed
+      << std::setprecision(0) << kPercent << "%  " << file.string();
+  std::cout << oss.str() << std::flush;
+}
 } // namespace
 
 Runner::Runner(const Config &config) : config_(config) {}
@@ -118,7 +148,7 @@ auto Runner::collectFiles(const fs::path &root) const -> std::vector<fs::path>
       continue;
     }
 
-    if(entry.is_regular_file() && isSourceFile(entry.path()))
+    if(entry.is_regular_file() && isCheckableFile(entry.path()))
     {
       kFiles.push_back(entry.path());
     }
@@ -129,13 +159,12 @@ auto Runner::collectFiles(const fs::path &root) const -> std::vector<fs::path>
   return kFiles;
 }
 
-auto Runner::buildChecksArgument() const -> std::string
+auto Runner::buildChecksArgument(const std::vector<std::string> &checks) const
+    -> std::string
 {
   std::ostringstream oss;
   oss << "-*";
-  for(const auto &check : config_.clangTidyChecks()) { oss << "," << check; }
-  const auto kChecks = config_.enabledChecks();
-  for(const auto &check : kChecks) { oss << "," << check; }
+  for(const auto &check : checks) { oss << "," << check; }
   return oss.str();
 }
 
@@ -145,17 +174,20 @@ auto Runner::runForFile(const fs::path &file, const RunPaths &paths,
   std::vector<Finding> findings;
   isCommandFailed = false;
 
-  const std::string kChecksArg = buildChecksArgument();
-  const std::optional<std::string> kConfigArg =
-      buildClangTidyConfigArgument(config_);
+  const std::string &kChecksArg =
+      isHeaderFile(file) ? paths.headerChecksArg_ : paths.sourceChecksArg_;
+  if(kChecksArg == "-*")
+  {
+    return findings;
+  }
   std::ostringstream cmd;
   cmd << "env ASAN_OPTIONS=verify_asan_link_order=0 clang-tidy "
       << shellQuote(file.string()) << " "
       << "-p=" << shellQuote(paths.compileDbDir_.string()) << " "
       << "-checks=" << shellQuote(kChecksArg) << " ";
-  if(kConfigArg)
+  if(paths.configArg_)
   {
-    cmd << "-config=" << shellQuote(*kConfigArg) << " ";
+    cmd << "-config=" << shellQuote(*paths.configArg_) << " ";
   }
   cmd << "--load=" << shellQuote(paths.pluginPath_.string()) << " 2>&1";
 
@@ -328,25 +360,68 @@ auto Runner::run(const fs::path &projectRoot, const fs::path &compileDbDir,
     return 0;
   }
 
+  std::vector<std::string> kSourceChecks = config_.clangTidyChecks();
+  const auto kCompanyChecks = config_.enabledChecks();
+  kSourceChecks.insert(kSourceChecks.end(), kCompanyChecks.begin(),
+                       kCompanyChecks.end());
+
+  const RunPaths kRunPaths{compileDbDir,
+                           pluginPath,
+                           buildChecksArgument(kSourceChecks),
+                           buildChecksArgument(kCompanyChecks),
+                           buildClangTidyConfigArgument(config_)};
+
   std::vector<Finding> findings;
-  bool isCommandFailed = false;
-  bool hasCommandFailure = false;
-  std::cout << g_kBold << "Scanning files" << g_kReset << "\n";
-  for(const auto &file : kFiles)
+  std::mutex findingsMutex;
+  std::atomic<bool> hasCommandFailure = false;
+  std::atomic<std::size_t> nextIndex = 0;
+  std::atomic<std::size_t> completed = 0;
+
+  unsigned int kWorkerCount = std::thread::hardware_concurrency();
+  if(kWorkerCount == 0)
   {
-    std::cout << "\r  " << file.string() << "                              "
-              << std::flush;
-    RunPaths runPaths{compileDbDir, pluginPath};
-    auto current = runForFile(file, runPaths, isCommandFailed);
-    findings.insert(findings.end(), current.begin(), current.end());
-    if(isCommandFailed)
-    {
-      hasCommandFailure = true;
-      isCommandFailed = false;
-    }
+    kWorkerCount = 1;
+  }
+  kWorkerCount =
+      static_cast<unsigned int>(std::min<std::size_t>(kWorkerCount, kFiles.size()));
+
+  std::cout << g_kBold << "Scanning files" << g_kReset << "\n";
+  std::vector<std::thread> workers;
+  workers.reserve(kWorkerCount);
+  for(unsigned int i = 0; i < kWorkerCount; ++i)
+  {
+    workers.emplace_back([&]() {
+      while(true)
+      {
+        const std::size_t kIndex = nextIndex.fetch_add(1);
+        if(kIndex >= kFiles.size())
+        {
+          return;
+        }
+
+        bool isCommandFailed = false;
+        auto current = runForFile(kFiles[kIndex], kRunPaths, isCommandFailed);
+        if(!current.empty())
+        {
+          std::lock_guard<std::mutex> lock(findingsMutex);
+          findings.insert(findings.end(), current.begin(), current.end());
+        }
+        if(isCommandFailed)
+        {
+          hasCommandFailure.store(true);
+        }
+
+        printProgress(completed.fetch_add(1) + 1, kFiles.size(), kFiles[kIndex]);
+      }
+    });
   }
 
-  std::cout << "\r" << std::string(80, ' ') << "\r";
+  for(auto &worker : workers)
+  {
+    worker.join();
+  }
+
+  std::cout << "\r\033[2K\n";
 
   std::sort(findings.begin(), findings.end(),
             [](const Finding &lhs, const Finding &rhs) {
@@ -363,7 +438,7 @@ auto Runner::run(const fs::path &projectRoot, const fs::path &compileDbDir,
 
   printFindings(findings, kFiles);
 
-  if(hasCommandFailure) { return 1; }
+  if(hasCommandFailure.load()) { return 1; }
 
   return std::any_of(findings.begin(), findings.end(),
                      [](const Finding &finding) {

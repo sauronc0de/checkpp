@@ -2,6 +2,7 @@
 
 #include "config.hpp"
 #include <filesystem>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -27,11 +28,15 @@ public:
 private:
   [[nodiscard]] auto collectFiles(const std::filesystem::path &root) const
       -> std::vector<std::filesystem::path>;
-  [[nodiscard]] auto buildChecksArgument() const -> std::string;
+  [[nodiscard]] auto buildChecksArgument(
+      const std::vector<std::string> &checks) const -> std::string;
   struct RunPaths
   {
     std::filesystem::path compileDbDir_;
     std::filesystem::path pluginPath_;
+    std::string sourceChecksArg_;
+    std::string headerChecksArg_;
+    std::optional<std::string> configArg_;
   };
   [[nodiscard]] auto runForFile(const std::filesystem::path &file,
                                 const RunPaths &paths,
