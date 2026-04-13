@@ -93,7 +93,7 @@ append_release_notes_section() {
   printf '\n' >> "$notes_path"
 }
 
-generate_release_notes() {
+build_release_notes_fallback() {
   local notes_path="$1"
   local previous_ref="$2"
   local notes_head="$3"
@@ -140,6 +140,85 @@ EOF
   append_release_notes_section "$notes_path" "Documentation" "${docs[@]}"
   append_release_notes_section "$notes_path" "Maintenance" "${chores[@]}"
   append_release_notes_section "$notes_path" "Other Changes" "${others[@]}"
+}
+
+extract_md_block() {
+  awk '
+    /^```md[[:space:]]*$/ { in_block=1; next }
+    in_block && /^```[[:space:]]*$/ { exit }
+    in_block { print }
+  '
+}
+
+generate_release_notes_with_ai() {
+  local notes_path="$1"
+  local previous_ref="$2"
+  local notes_head="$3"
+  local commit_count="$4"
+  local commit_log
+  local code_fence='```'
+  local prompt
+  local ai_output
+  local markdown_block
+
+  if ! command -v opencode >/dev/null 2>&1; then
+    return 1
+  fi
+
+  if [ "$commit_count" -eq 0 ]; then
+    build_release_notes_fallback "$notes_path" "$previous_ref" "$notes_head" "$commit_count"
+    return 0
+  fi
+
+  commit_log="$(git log --no-merges --pretty=format:'- %h %s' "${previous_ref}..${notes_head}")"
+  prompt=$(cat <<EOF
+Create release notes for checkpp.
+
+Compare commits from ${previous_ref} to ${notes_head}.
+Return ONLY one fenced markdown block using this exact fence style:
+
+${code_fence}md
+...
+${code_fence}
+
+Rules:
+- group related commits together
+- rewrite raw commit messages into clear user-facing release notes
+- avoid mentioning internal noise unless it matters for users
+- keep the output concise but useful
+- include Overview, Highlights, and Notable Fixes sections when applicable
+- if there are no meaningful changes for a section, omit that section
+
+Commits:
+${commit_log}
+EOF
+)
+
+  if ! ai_output="$(opencode run "$prompt")"; then
+    return 1
+  fi
+
+  markdown_block="$(printf '%s\n' "$ai_output" | extract_md_block)"
+  if [ -z "$markdown_block" ]; then
+    return 1
+  fi
+
+  printf '%s\n' "$markdown_block" > "$notes_path"
+}
+
+
+generate_release_notes() {
+  local notes_path="$1"
+  local previous_ref="$2"
+  local notes_head="$3"
+  local commit_count="$4"
+
+  if generate_release_notes_with_ai "$notes_path" "$previous_ref" "$notes_head" "$commit_count"; then
+    return 0
+  fi
+
+  log "Falling back to deterministic release notes generation"
+  build_release_notes_fallback "$notes_path" "$previous_ref" "$notes_head" "$commit_count"
 }
 
 prompt_release_type() {
