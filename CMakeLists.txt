@@ -50,6 +50,7 @@ include_directories(SYSTEM ${LLVM_INCLUDE_DIRS} ${CLANG_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})
 
 add_subdirectory(clang-tidy-module)
+add_subdirectory(tools/programs)
 
 add_executable(checkpp
     src/main.cpp

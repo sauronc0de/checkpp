@@ -137,7 +137,28 @@ run_logged() {
 
 verify_checker_output() {
   local log_file="$1"
-  "$RELEASE_TOOL" verify-checker-output "$log_file"
+  local summary
+  local errors
+  local warnings
+
+  summary="$({
+    tr -d '\000' < "$log_file" |
+      sed -E 's/\x1B\[[0-9;]*[A-Za-z]//g' |
+      awk '/Errors:[[:space:]]*[0-9]+/ || /Warnings:[[:space:]]*[0-9]+/'
+  } | tail -n 2)"
+
+  errors="$(printf '%s\n' "$summary" | awk '/Errors:[[:space:]]*[0-9]+/ { print $2 }' | tail -n 1)"
+  warnings="$(printf '%s\n' "$summary" | awk '/Warnings:[[:space:]]*[0-9]+/ { print $2 }' | tail -n 1)"
+
+  if [ -z "$errors" ] || [ -z "$warnings" ]; then
+    printf 'Could not parse checker summary from %s\n' "$log_file" >&2
+    return 1
+  fi
+
+  if [ "$errors" -ne 0 ] || [ "$warnings" -ne 0 ]; then
+    printf 'Checker summary reports Errors=%s Warnings=%s\n' "$errors" "$warnings" >&2
+    return 1
+  fi
 }
 
 require_cmd git

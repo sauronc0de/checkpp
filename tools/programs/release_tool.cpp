@@ -4,6 +4,7 @@
 #include <fstream>
 #include <iostream>
 #include <regex>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -207,18 +208,36 @@ std::string strip_ansi(const std::string &text)
 void verify_checker_output(const std::string &path)
 {
   const std::string text = strip_ansi(read_file(path));
-  const std::regex errors_regex(R"(^Errors:\s+([0-9]+))", std::regex_constants::multiline);
-  const std::regex warnings_regex(R"(^Warnings:\s+([0-9]+))", std::regex_constants::multiline);
+  const std::regex errors_regex(R"(Errors:\s*([0-9]+))");
+  const std::regex warnings_regex(R"(Warnings:\s*([0-9]+))");
 
-  std::smatch errors_match;
-  std::smatch warnings_match;
-  if(!std::regex_search(text, errors_match, errors_regex) || !std::regex_search(text, warnings_match, warnings_regex))
+  int errors = -1;
+  int warnings = -1;
+  std::istringstream stream(text);
+  std::string line;
+  while(std::getline(stream, line))
+  {
+    if(!line.empty() && line.back() == '\r')
+    {
+      line.pop_back();
+    }
+
+    std::smatch match;
+    if(std::regex_search(line, match, errors_regex))
+    {
+      errors = std::stoi(match[1].str());
+    }
+    if(std::regex_search(line, match, warnings_regex))
+    {
+      warnings = std::stoi(match[1].str());
+    }
+  }
+
+  if(errors < 0 || warnings < 0)
   {
     fail("could not parse checker summary");
   }
 
-  const int errors = std::stoi(errors_match[1].str());
-  const int warnings = std::stoi(warnings_match[1].str());
   if(errors != 0 || warnings != 0)
   {
     fail("checker reported errors=" + std::to_string(errors) + " warnings=" + std::to_string(warnings));
