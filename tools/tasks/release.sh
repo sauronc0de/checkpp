@@ -76,6 +76,72 @@ previous_release_ref() {
   "$RELEASE_TOOL" previous-release-ref "$tag"
 }
 
+append_release_notes_section() {
+  local notes_path="$1"
+  local title="$2"
+  shift 2
+
+  if [ "$#" -eq 0 ]; then
+    return 0
+  fi
+
+  printf '## %s\n\n' "$title" >> "$notes_path"
+  local item
+  for item in "$@"; do
+    printf -- '- %s\n' "$item" >> "$notes_path"
+  done
+  printf '\n' >> "$notes_path"
+}
+
+generate_release_notes() {
+  local notes_path="$1"
+  local previous_ref="$2"
+  local notes_head="$3"
+  local commit_count="$4"
+  local short_head
+  local subject
+  local -a features=()
+  local -a fixes=()
+  local -a docs=()
+  local -a chores=()
+  local -a others=()
+
+  short_head="$(git rev-parse --short "$notes_head")"
+
+  cat > "$notes_path" <<EOF
+# ${TAG}
+
+Release generated from ${DEFAULT_BRANCH} at ${short_head}.
+
+## Overview
+
+- ${commit_count} commit(s) since ${previous_ref}
+
+EOF
+
+  if [ "$commit_count" -eq 0 ]; then
+    printf '## Changes\n\n- No changes\n' >> "$notes_path"
+    return 0
+  fi
+
+  while IFS= read -r subject; do
+    [ -n "$subject" ] || continue
+    case "$subject" in
+      feat:*|add:*) features+=("${subject#*: }") ;;
+      fix:*|bugfix:*) fixes+=("${subject#*: }") ;;
+      docs:*) docs+=("${subject#*: }") ;;
+      chore:*|refactor:*|build:*|ci:*|test:*) chores+=("${subject#*: }") ;;
+      *) others+=("$subject") ;;
+    esac
+  done < <(git log --no-merges --pretty=format:'%s' "${previous_ref}..${notes_head}")
+
+  append_release_notes_section "$notes_path" "Features" "${features[@]}"
+  append_release_notes_section "$notes_path" "Fixes" "${fixes[@]}"
+  append_release_notes_section "$notes_path" "Documentation" "${docs[@]}"
+  append_release_notes_section "$notes_path" "Maintenance" "${chores[@]}"
+  append_release_notes_section "$notes_path" "Other Changes" "${others[@]}"
+}
+
 prompt_release_type() {
   local release_type="${1:-}"
 
@@ -253,25 +319,11 @@ if [ -f "$PROJECT_ROOT/config/ignore_paths.txt" ]; then
   release_assets+=("$ARTIFACT_DIR/ignore_paths.txt")
 fi
 
-cat > "$NOTES_PATH" <<EOF
-# ${TAG}
-
-Release generated from ${DEFAULT_BRANCH} at $(git rev-parse --short HEAD).
-
-## Changes since ${previous_ref}
-
-${commit_count} commit(s)
-EOF
-if [ "$commit_count" -gt 0 ]; then
-  git log --no-merges --pretty=format:'- %s' "${previous_ref}..${notes_head}" >> "$NOTES_PATH"
-else
-  printf '%s\n' '- No changes' >> "$NOTES_PATH"
-fi
-printf '\n' >> "$NOTES_PATH"
+generate_release_notes "$NOTES_PATH" "$previous_ref" "$notes_head" "$commit_count"
 
 sha256sum \
   "${release_assets[@]}" \
-  "$NOTES_PATH" > "$SHA_PATH"
+  > "$SHA_PATH"
 
 log "Tagging release ${TAG}"
 git tag -a "$TAG" -m "Release ${TAG}"
@@ -282,7 +334,6 @@ gh release create "$TAG" \
   --title "$TAG" \
   --notes-file "$NOTES_PATH" \
   "${release_assets[@]}" \
-  "$NOTES_PATH" \
   "$SHA_PATH"
 
 NEXT_VERSION="$(bump_version "$RELEASE_TYPE")"
