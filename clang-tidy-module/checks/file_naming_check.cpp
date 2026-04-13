@@ -14,8 +14,9 @@ auto FileNamingCheck::registerMatchers(ast_matchers::MatchFinder *finder)
 auto FileNamingCheck::check(
     const ast_matchers::MatchFinder::MatchResult &result) -> void
 {
-  const auto *tu = result.Nodes.getNodeAs<clang::TranslationUnitDecl>("tu");
-  if(tu == nullptr || result.SourceManager == nullptr)
+  const auto *kTranslationUnit =
+      result.Nodes.getNodeAs<clang::TranslationUnitDecl>("tu");
+  if(kTranslationUnit == nullptr || result.SourceManager == nullptr)
   {
     return;
   }

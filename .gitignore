@@ -2,3 +2,4 @@ build/
 data/
 .cache/
 .engram/
+src/embedded_clang_tidy_module.cpp

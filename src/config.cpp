@@ -111,7 +111,7 @@ auto loadIgnorePaths(const std::filesystem::path &ignorePathsPath,
 } // namespace
 
 auto Config::loadFromFile(const std::string &path,
-                          std::filesystem::path ignorePathsPath) -> bool
+                          const std::filesystem::path &ignorePathsPath) -> bool
 {
   YAML::Node root = YAML::LoadFile(path);
   if(!root["checks"] && !root["clang_tidy_checks"])

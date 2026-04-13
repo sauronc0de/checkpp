@@ -12,6 +12,7 @@ public:
       : includes_(includes)
   {
   }
+  // NOLINTBEGIN(bugprone-easily-swappable-parameters)
   auto InclusionDirective(
       clang::SourceLocation hashLoc, const clang::Token &token,
       llvm::StringRef fileName, bool isAngled, clang::CharSourceRange range,
@@ -44,12 +45,14 @@ public:
     (void)importedModule;
     (void)kind;
   }
+  // NOLINTEND(bugprone-easily-swappable-parameters)
 
 private:
   std::vector<IncludeOrderCheck::IncludeEntry> &includes_;
 };
 } // namespace
 
+// NOLINTBEGIN(bugprone-easily-swappable-parameters)
 auto IncludeOrderCheck::registerPPCallbacks(
     const clang::SourceManager &sourceManager,
     clang::Preprocessor *preprocessor,
@@ -61,6 +64,7 @@ auto IncludeOrderCheck::registerPPCallbacks(
   preprocessor->addPPCallbacks(
       std::make_unique<IncludeOrderCallbacks>(includes_));
 }
+// NOLINTEND(bugprone-easily-swappable-parameters)
 
 auto IncludeOrderCheck::onEndOfTranslationUnit() -> void
 {

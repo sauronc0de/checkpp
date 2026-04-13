@@ -159,7 +159,7 @@ auto Runner::collectFiles(const fs::path &root) const -> std::vector<fs::path>
   return kFiles;
 }
 
-auto Runner::buildChecksArgument(const std::vector<std::string> &checks) const
+auto Runner::buildChecksArgument(const std::vector<std::string> &checks)
     -> std::string
 {
   std::ostringstream oss;
@@ -274,11 +274,17 @@ auto Runner::printFindings(const std::vector<Finding> &findings,
   for(const auto &finding : findings)
   {
     if(finding.severity_ == Severity::Error)
+    {
       ++errors;
+    }
     else if(finding.severity_ == Severity::Warning)
+    {
       ++warnings;
+    }
     else if(finding.severity_ == Severity::Info)
+    {
       ++infos;
+    }
 
     const char *color = colorForSeverity(finding.severity_);
     std::cout << color << g_kBold << "[" << toString(finding.severity_) << "]"
@@ -350,6 +356,7 @@ auto Runner::printFindings(const std::vector<Finding> &findings,
   }
 }
 
+// NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
 auto Runner::run(const fs::path &projectRoot, const fs::path &compileDbDir,
                  const fs::path &pluginPath) const -> int
 {
@@ -382,8 +389,8 @@ auto Runner::run(const fs::path &projectRoot, const fs::path &compileDbDir,
   {
     kWorkerCount = 1;
   }
-  kWorkerCount =
-      static_cast<unsigned int>(std::min<std::size_t>(kWorkerCount, kFiles.size()));
+  kWorkerCount = static_cast<unsigned int>(
+      std::min<std::size_t>(kWorkerCount, kFiles.size()));
 
   std::cout << g_kBold << "Scanning files" << g_kReset << "\n";
   std::vector<std::thread> workers;
@@ -411,7 +418,9 @@ auto Runner::run(const fs::path &projectRoot, const fs::path &compileDbDir,
           hasCommandFailure.store(true);
         }
 
-        printProgress(completed.fetch_add(1) + 1, kFiles.size(), kFiles[kIndex]);
+        printProgress(completed.fetch_add(1) + 1,
+                      kFiles.size(),
+                      kFiles[kIndex]);
       }
     });
   }

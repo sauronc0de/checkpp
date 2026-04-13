@@ -21,6 +21,7 @@ class Runner
 {
 public:
   explicit Runner(const Config &config);
+  // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
   auto run(const std::filesystem::path &projectRoot,
            const std::filesystem::path &compileDbDir,
            const std::filesystem::path &pluginPath) const -> int;
@@ -28,8 +29,8 @@ public:
 private:
   [[nodiscard]] auto collectFiles(const std::filesystem::path &root) const
       -> std::vector<std::filesystem::path>;
-  [[nodiscard]] auto buildChecksArgument(
-      const std::vector<std::string> &checks) const -> std::string;
+  [[nodiscard]] static auto buildChecksArgument(
+      const std::vector<std::string> &checks) -> std::string;
   struct RunPaths
   {
     std::filesystem::path compileDbDir_;

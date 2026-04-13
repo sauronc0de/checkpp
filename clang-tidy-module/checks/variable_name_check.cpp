@@ -9,7 +9,7 @@ namespace
 auto isKPascalCase(const std::string &name) -> bool
 {
   return name.size() > 1 && name[0] == 'k' &&
-         std::isupper(static_cast<unsigned char>(name[1])) &&
+         std::isupper(static_cast<unsigned char>(name[1])) != 0 &&
          isPascalCase(name.substr(1));
 }
 } // namespace
