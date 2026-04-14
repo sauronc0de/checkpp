@@ -4,7 +4,8 @@
     "dockerfile": "Dockerfile",
     "args": {
       "WORKSPACE_DIR": "/workspaces/${localWorkspaceFolderBasename}",
-      "PROJECT_NAME": "${localWorkspaceFolderBasename}"
+      "PROJECT_NAME": "${localWorkspaceFolderBasename}",
+      "GH_TOKEN": "${localEnv:GH_TOKEN}"
     }
   },
   "containerEnv": {

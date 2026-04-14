@@ -302,8 +302,8 @@ require_cmd sha256sum
 
 cd "$PROJECT_ROOT"
 
-if ! gh auth status >/dev/null 2>&1; then
-  die "No GitHub authentication. Run 'gh auth login' first."
+if ! gh api user >/dev/null 2>&1; then
+  die "GitHub auth not working. Please run 'gh auth login' to authenticate or add GH_TOKEN to the environment."
 fi
 
 CURRENT_VERSION="$(project_version)"
