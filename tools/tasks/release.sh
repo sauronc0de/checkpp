@@ -302,6 +302,17 @@ require_cmd sha256sum
 
 cd "$PROJECT_ROOT"
 
+if ! gh auth status >/dev/null 2>&1; then
+  die "No GitHub authentication. Run 'gh auth login' first."
+fi
+
+CURRENT_VERSION="$(project_version)"
+TAG="v${CURRENT_VERSION}"
+
+if git ls-remote --exit-code --tags "$REMOTE" "refs/tags/${TAG}" >/dev/null 2>&1; then
+  die "Version ${TAG} already pushed to ${REMOTE}"
+fi
+
 DEFAULT_BRANCH="$(default_branch)"
 CURRENT_BRANCH="$(current_branch)"
 
@@ -363,9 +374,6 @@ verify_checker_output "$CHECKER_LOG" || die "Checker reported warnings or errors
 
 if git rev-parse --verify --quiet "refs/tags/${TAG}" >/dev/null; then
   die "Tag already exists locally: ${TAG}"
-fi
-if git ls-remote --exit-code --tags "$REMOTE" "refs/tags/${TAG}" >/dev/null 2>&1; then
-  die "Tag already exists on ${REMOTE}: ${TAG}"
 fi
 
 previous_ref="$(previous_release_ref "$TAG")"
