@@ -2,6 +2,6 @@
 set -e
 
 HOSTNAME="0.0.0.0"
-PORT="4096"
+PORT="4444"
 
 exec opencode web --hostname "${HOSTNAME}" --port "${PORT}"
