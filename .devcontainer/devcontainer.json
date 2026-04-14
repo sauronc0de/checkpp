@@ -4,8 +4,7 @@
     "dockerfile": "Dockerfile",
     "args": {
       "WORKSPACE_DIR": "/workspaces/${localWorkspaceFolderBasename}",
-      "PROJECT_NAME": "${localWorkspaceFolderBasename}",
-      "GH_TOKEN": "${localEnv:GH_TOKEN}"
+      "PROJECT_NAME": "${localWorkspaceFolderBasename}"
     }
   },
   "containerEnv": {
@@ -13,7 +12,7 @@
   },
   "mounts": [
     // Load OpenCode credentials and settings from host.
-    "source=${localEnv:HOME}/.local/share/opencode,target=/home/sauroncode/.local/share/opencode,type=bind",
+    "source=${localEnv:HOME}/.local/share/opencode,target=/home/sauroncode/.local/share/opencode,type=bind"
   ],
   "postStartCommand": "sudo chown -R sauroncode /workspaces/${localWorkspaceFolderBasename} && chmod +x .devcontainer/docker_entrypoint.sh && .devcontainer/docker_entrypoint.sh",
   "customizations": {
