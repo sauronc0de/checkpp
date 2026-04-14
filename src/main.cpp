@@ -5,15 +5,30 @@
 #include <filesystem>
 #include <iostream>
 
+#ifndef CHECKPP_VERSION
+#define CHECKPP_VERSION "unknown"
+#endif
+
 namespace fs = std::filesystem;
 
 auto main(int argc, char **argv) -> int
 {
+  if(argc == 2)
+  {
+    const std::string kArg = argv[1];
+    if(kArg == "-v" || kArg == "--version")
+    {
+      std::cout << CHECKPP_VERSION << "\n";
+      return 0;
+    }
+  }
+
   if(argc < 4)
   {
     std::cerr
         << "Usage: checkpp <project_root> <compile_commands_dir> <rules.yaml> "
         << "[--plugin <plugin_path>] [--ignore-paths <ignore_paths.txt>]\n";
+    std::cerr << "       checkpp --version\n";
     return 1;
   }
 

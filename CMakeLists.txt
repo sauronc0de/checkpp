@@ -60,6 +60,7 @@ add_executable(checkpp
 )
 
 target_include_directories(checkpp PRIVATE include ${CMAKE_CURRENT_BINARY_DIR})
+target_compile_definitions(checkpp PRIVATE CHECKPP_VERSION="${PROJECT_VERSION}")
 
 if(CHECKPP_EMBED_CLANG_TIDY_MODULE)
     target_compile_definitions(checkpp PRIVATE CHECKPP_EMBED_CLANG_TIDY_MODULE)

@@ -13,8 +13,8 @@ usage() {
 Usage: $0
 
 Runs the strict release workflow.
-You will be prompted for patch, minor, or major.
-If no prompt is available, patch is used by default.
+Uses the version already declared in CMakeLists.txt.
+Fails if that version tag already exists locally or on the remote.
 EOF
 }
 
@@ -23,21 +23,10 @@ if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
   exit 0
 fi
 
-if [ "$#" -gt 1 ]; then
-  printf 'Too many arguments.\n' >&2
+if [ "$#" -gt 0 ]; then
+  printf 'This command does not take positional arguments.\n' >&2
   usage >&2
   exit 1
-fi
-
-if [ "$#" -eq 1 ]; then
-  case "$1" in
-    patch|minor|major) ;;
-    *)
-      printf 'Unknown argument: %s\n' "$1" >&2
-      usage >&2
-      exit 1
-      ;;
-  esac
 fi
 
 die() {
@@ -322,8 +311,6 @@ fi
 
 assert_clean_tree
 
-RELEASE_TYPE="$(prompt_release_type "${1:-}")"
-
 log "Pulling latest ${DEFAULT_BRANCH} from ${REMOTE}"
 git pull --ff-only "$REMOTE" "$DEFAULT_BRANCH"
 
@@ -361,6 +348,8 @@ NOTES_PATH="${RELEASE_DIR}/release-notes-${TAG}.md"
 SHA_PATH="${RELEASE_DIR}/SHA256SUMS"
 
 mkdir -p "$RELEASE_DIR"
+
+log "Preparing release ${TAG} from version declared in CMakeLists.txt"
 
 if [ ! -x "$CHECKPP_BIN" ]; then
   die "Built binary not found: ${CHECKPP_BIN}"
@@ -414,10 +403,5 @@ gh release create "$TAG" \
   --notes-file "$NOTES_PATH" \
   "${release_assets[@]}" \
   "$SHA_PATH"
-
-NEXT_VERSION="$(bump_version "$RELEASE_TYPE")"
-git add CMakeLists.txt
-git commit -m "chore: bump version to v${NEXT_VERSION}"
-git push "$REMOTE" "$DEFAULT_BRANCH"
 
 log "Release completed: ${TAG}"
