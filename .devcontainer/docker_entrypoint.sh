@@ -15,5 +15,10 @@ sudo chown --no-dereference -R $(whoami) $WORKSPACE_DIR
 # Set executable permissions to all files within a relative path
 sudo chmod -R +x ./tools/tasks
 
+# Link opencode mounted folder to user home directory
+mkdir -p "$HOME/.local/share" \
+&& rm -rf "$HOME/.local/share/opencode" \
+&& ln -s /opt/opencode-host "$HOME/.local/share/opencode"
+
 # Adding environment variables
 echo 'source "$HOME/.local/share/opencode/gh.env"' >> ~/.bashrc

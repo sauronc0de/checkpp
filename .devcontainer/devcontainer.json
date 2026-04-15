@@ -12,9 +12,9 @@
   },
   "mounts": [
     // Load OpenCode credentials and settings from host.
-    "source=${localEnv:HOME}/.local/share/opencode,target=/home/sauroncode/.local/share/opencode,type=bind"
+    "source=${localEnv:HOME}/.local/share/opencode,target=/opt/opencode-host,type=bind"
   ],
-  "postStartCommand": "sudo chown -R sauroncode /workspaces/${localWorkspaceFolderBasename} && chmod +x .devcontainer/docker_entrypoint.sh && .devcontainer/docker_entrypoint.sh",
+  "postStartCommand": "sudo chown -R $(id -u):$(id -g) /workspaces/${localWorkspaceFolderBasename} && chmod +x .devcontainer/docker_entrypoint.sh && .devcontainer/docker_entrypoint.sh",
   "customizations": {
     "vscode": {
       "extensions": [
