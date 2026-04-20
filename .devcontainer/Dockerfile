@@ -135,6 +135,6 @@ ENV PATH="${HOME}/.local/bin:${HOME}/go/bin:/usr/local/go/bin:${PATH}"
 RUN curl -fsSL https://opencode.ai/install | bash
 
 RUN gentle-ai install \
-    --preset full-gentleman \
     --agents opencode \
-    --persona neutral
+    --preset custom \
+    --components engram,sdd,skills,context7,gga

@@ -11,7 +11,6 @@
     "ENGRAM_DATA_DIR": "${containerWorkspaceFolder}/.engram" // Path where the Engram database is stored. Should be located inside the workspace folder so data persists across container rebuilds.
   },
   "mounts": [
-    // Load OpenCode credentials and settings from host.
     "source=${localEnv:HOME}/.local/share/opencode,target=/opt/opencode-host,type=bind"
   ],
   "postStartCommand": "sudo chown -R $(id -u):$(id -g) /workspaces/${localWorkspaceFolderBasename} && chmod +x .devcontainer/docker_entrypoint.sh && .devcontainer/docker_entrypoint.sh",
