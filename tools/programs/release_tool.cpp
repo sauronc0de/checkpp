@@ -34,20 +34,6 @@ std::string read_file(const std::string &path)
   return std::string(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>());
 }
 
-void write_file(const std::string &path, const std::string &content)
-{
-  std::ofstream out(path, std::ios::trunc);
-  if(!out)
-  {
-    fail("failed to write file: " + path);
-  }
-  out << content;
-  if(!out)
-  {
-    fail("failed to flush file: " + path);
-  }
-}
-
 CommandResult run_command_capture(const std::string &command)
 {
   CommandResult result;
