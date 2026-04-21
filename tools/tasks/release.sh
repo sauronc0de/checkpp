@@ -50,14 +50,11 @@ release_release_notes_subject() {
 
 usage() {
   cat <<EOF
-Usage: $0 [patch|minor|major]
+Usage: $0
 
 checkpp release entrypoint.
 This script supplies checkpp-specific paths and hooks, then runs the shared flow in
 tools/tasks/release_common.sh.
-
-Without an argument, the script prompts for the release type. The common flow owns
-branch checks, build/validation, release notes, checksums, tagging, and GitHub release creation.
 EOF
 }
 
@@ -66,8 +63,8 @@ if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
   exit 0
 fi
 
-if [ "$#" -gt 1 ]; then
-  printf 'This command accepts at most one positional argument.\n' >&2
+if [ "$#" -gt 0 ]; then
+  printf 'This command does not accept positional arguments.\n' >&2
   usage >&2
   exit 1
 fi
@@ -75,4 +72,4 @@ fi
 # shellcheck source=/dev/null
 source "$RELEASE_COMMON_SCRIPT"
 
-release_main "${1:-}"
+release_main

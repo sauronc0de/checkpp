@@ -95,46 +95,6 @@ std::string current_version()
   return match[1].str();
 }
 
-std::string bump_version(const std::string &release_type)
-{
-  std::string text = read_file("CMakeLists.txt");
-  const std::regex pattern(R"((project\(checkpp\s+VERSION\s+)([0-9]+)\.([0-9]+)\.([0-9]+)(\s+LANGUAGES\s+C\s+CXX\)))");
-  std::smatch match;
-  if(!std::regex_search(text, match, pattern))
-  {
-    fail("could not find project version in CMakeLists.txt");
-  }
-
-  int major = std::stoi(match[2].str());
-  int minor = std::stoi(match[3].str());
-  int patch = std::stoi(match[4].str());
-
-  if(release_type == "patch")
-  {
-    ++patch;
-  }
-  else if(release_type == "minor")
-  {
-    ++minor;
-    patch = 0;
-  }
-  else if(release_type == "major")
-  {
-    ++major;
-    minor = 0;
-    patch = 0;
-  }
-  else
-  {
-    fail("invalid release type: " + release_type);
-  }
-
-  const std::string new_version = std::to_string(major) + "." + std::to_string(minor) + "." + std::to_string(patch);
-  text.replace(match.position(0), match.length(0), match[1].str() + new_version + match[5].str());
-  write_file("CMakeLists.txt", text);
-  return new_version;
-}
-
 std::string previous_release_ref(const std::string &tag)
 {
   const std::string describe_cmd = "git describe --tags --abbrev=0 --match 'v[0-9]*' '" + tag + "^' 2>/dev/null";
@@ -249,7 +209,6 @@ void print_usage()
   std::cout << "Usage: checkpp-release-tool <command> [args]\n"
             << "Commands:\n"
             << "  project-version\n"
-            << "  bump-version <patch|minor|major>\n"
             << "  previous-release-ref <tag>\n"
             << "  assert-no-warning-lines <log-file>\n"
             << "  verify-checker-output <log-file>\n";
@@ -275,16 +234,6 @@ int main(int argc, char **argv)
         fail("project-version takes no arguments");
       }
       std::cout << current_version() << '\n';
-      return 0;
-    }
-
-    if(command == "bump-version")
-    {
-      if(argc != 3)
-      {
-        fail("bump-version requires one argument: patch, minor, or major");
-      }
-      std::cout << bump_version(argv[2]) << '\n';
       return 0;
     }
 

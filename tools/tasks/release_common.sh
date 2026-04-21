@@ -216,38 +216,6 @@ release_common_generate_release_notes() {
   release_common_build_release_notes_fallback "$notes_path" "$previous_ref" "$notes_head" "$commit_count" "$tag"
 }
 
-release_common_prompt_release_type() {
-  local release_type="${1:-}"
-
-  if [ -n "$release_type" ]; then
-    printf '%s\n' "$release_type"
-    return 0
-  fi
-
-  if [ ! -r /dev/tty ] || [ ! -w /dev/tty ]; then
-    printf '%s\n' "patch"
-    return 0
-  fi
-
-  while true; do
-    printf 'Select release type [patch/minor/major] (default: patch): ' > /dev/tty
-    IFS= read -r release_type < /dev/tty || release_common_die "Failed to read release type"
-    case "$release_type" in
-      "")
-        printf '%s\n' "patch"
-        return 0
-        ;;
-      patch|minor|major)
-        printf '%s\n' "$release_type"
-        return 0
-        ;;
-      *)
-        printf 'Please enter patch, minor, or major.\n' >&2
-        ;;
-    esac
-  done
-}
-
 release_common_run_logged() {
   local log_file="$1"
   shift
@@ -327,7 +295,6 @@ EOF
 }
 
 release_main() {
-  local release_type
   local current_branch
   local tag
   local build_dir
@@ -341,8 +308,6 @@ release_main() {
   local notes_head
   local commit_count
   local -a release_assets=()
-
-  release_type="$(release_common_prompt_release_type "${1:-}")"
 
   release_common_require_cmd git
   release_common_require_cmd cmake
