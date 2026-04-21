@@ -5,3 +5,6 @@ tools
 tests
 build
 src/embedded_clang_tidy_module.cpp
+.opencode
+.engram
+.cache
