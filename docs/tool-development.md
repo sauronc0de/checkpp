@@ -2,7 +2,7 @@
 
 ## Layout
 
-- `tools/tasks/` — Bash orchestration scripts
+- `tools/scripts/` — Bash orchestration scripts
 - `tools/programs/` — C++ helper tools
 - `docs/` — project workflow and conventions
 
