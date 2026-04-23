@@ -19,7 +19,7 @@ The release flow should:
 
 1. Build the release preset.
 2. Use the embedded `checkpp` plugin.
-3. Package only `checkpp`, `config/rules.yaml`, and optional `config/ignore_paths.txt`.
+3. Package `checkpp`, the primary rules file, and any supported bundled config profiles under `config/`.
 4. Use C++ helpers for version parsing, log validation, and release metadata.
 
 ## C++ tools

@@ -1,0 +1,91 @@
+clang_tidy_checks:
+  - -*
+  - clang-analyzer-*
+  - bugprone-*
+  - performance-*
+  - modernize-*
+  - readability-*
+  - -readability-identifier-naming
+  - -readability-magic-numbers
+
+checks:
+  company-file-snake-case:
+    rule_id: "C-5.1"
+    enabled: true
+    severity: error
+
+  company-global-function-module-prefix:
+    rule_id: "C-7.1"
+    enabled: true
+    severity: error
+
+  company-global-variable-module-prefix:
+    rule_id: "C-7.2"
+    enabled: true
+    severity: warning
+
+  company-local-variable-snake-case:
+    rule_id: "C-7.3"
+    enabled: true
+    severity: warning
+
+  company-enum-value-upper-case:
+    rule_id: "C-7.4"
+    enabled: true
+    severity: warning
+
+  company-macro-upper-case:
+    rule_id: "C-7.5"
+    enabled: true
+    severity: warning
+
+  company-no-tabs:
+    rule_id: "C-2.1"
+    enabled: true
+    severity: error
+
+  company-line-length:
+    rule_id: "C-2.2"
+    enabled: true
+    severity: error
+    max_length: 80
+
+  company-class-pascal-case:
+    rule_id: "CPP-1"
+    enabled: true
+    severity: error
+
+  company-struct-pascal-case:
+    rule_id: "CPP-2"
+    enabled: true
+    severity: error
+
+  company-enum-pascal-case:
+    rule_id: "CPP-3"
+    enabled: true
+    severity: warning
+
+  company-member-trailing-underscore:
+    rule_id: "CPP-4"
+    enabled: true
+    severity: warning
+
+  company-namespace-snake-case:
+    rule_id: "CPP-5"
+    enabled: true
+    severity: warning
+
+  company-template-parameter-pascal-case:
+    rule_id: "CPP-6"
+    enabled: true
+    severity: warning
+
+  company-no-using-namespace-std:
+    rule_id: "CPP-7"
+    enabled: true
+    severity: error
+
+  company-constructor-init-list:
+    rule_id: "CPP-8"
+    enabled: true
+    severity: warning

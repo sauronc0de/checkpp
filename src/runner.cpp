@@ -363,7 +363,7 @@ auto Runner::run(const fs::path &projectRoot, const fs::path &compileDbDir,
   const auto kFiles = collectFiles(projectRoot);
   if(kFiles.empty())
   {
-    std::cout << "No C++ files found.\n";
+    std::cout << "No C/C++ files found.\n";
     return 0;
   }
 

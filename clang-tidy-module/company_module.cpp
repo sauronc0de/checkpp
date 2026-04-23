@@ -7,8 +7,10 @@
 #include "checks/function_name_check.hpp"
 #include "checks/include_order_check.hpp"
 #include "checks/line_length_check.hpp"
+#include "checks/macro_name_check.hpp"
 #include "checks/member_variable_check.hpp"
 #include "checks/namespace_name_check.hpp"
+#include "checks/no_tabs_check.hpp"
 #include "checks/no_using_namespace_std_check.hpp"
 #include "checks/struct_name_check.hpp"
 #include "checks/template_parameter_check.hpp"
@@ -32,10 +34,17 @@ public:
     factories.registerCheck<StructNameCheck>("company-struct-pascal-case");
     factories.registerCheck<EnumNameCheck>("company-enum-pascal-case");
     factories.registerCheck<EnumValueCheck>("company-enum-value-pascal-case");
+    factories.registerCheck<EnumValueCheck>("company-enum-value-upper-case");
     factories.registerCheck<FunctionNameCheck>("company-function-camel-case");
+    factories.registerCheck<FunctionNameCheck>(
+        "company-global-function-module-prefix");
     factories.registerCheck<VariableNameCheck>("company-variable-camel-case");
     factories.registerCheck<VariableNameCheck>("company-constant-k-prefix");
     factories.registerCheck<VariableNameCheck>("company-global-g-prefix");
+    factories.registerCheck<VariableNameCheck>(
+        "company-global-variable-module-prefix");
+    factories.registerCheck<VariableNameCheck>(
+        "company-local-variable-snake-case");
     factories.registerCheck<MemberVariableCheck>(
         "company-member-trailing-underscore");
     factories.registerCheck<NamespaceNameCheck>("company-namespace-snake-case");
@@ -46,6 +55,8 @@ public:
     factories.registerCheck<NoUsingNamespaceStdCheck>(
         "company-no-using-namespace-std");
     factories.registerCheck<LineLengthCheck>("company-line-length");
+    factories.registerCheck<NoTabsCheck>("company-no-tabs");
+    factories.registerCheck<MacroNameCheck>("company-macro-upper-case");
     factories.registerCheck<ConstructorInitListCheck>(
         "company-constructor-init-list");
   }

@@ -24,6 +24,20 @@ RELEASE_PACKAGE_BINARY_ASSET_NAME="checkpp"
 RELEASE_RULES_ASSET_NAME="rules"
 RELEASE_IGNORE_PATHS_ASSET_NAME="ignore_paths.txt"
 
+release_package_extra_assets() {
+  local release_dir="$1"
+  local artifact_dir="$2"
+  local tag="$3"
+  local c_family_dst="${artifact_dir}/rules-c-family-${tag}.yaml"
+  local c_family_cpp_dst="${artifact_dir}/rules-c-family-cpp-${tag}.yaml"
+  : "${release_dir}"
+
+  cp "${PROJECT_ROOT}/config/rules_c_family.yaml" "$c_family_dst"
+  cp "${PROJECT_ROOT}/config/rules_c_family_cpp.yaml" "$c_family_cpp_dst"
+
+  printf '%s\n' "$c_family_dst" "$c_family_cpp_dst"
+}
+
 release_project_version() {
   "$RELEASE_HELPER" project-version
 }

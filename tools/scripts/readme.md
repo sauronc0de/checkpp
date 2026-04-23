@@ -31,7 +31,7 @@ The shared script also provides optional hooks for custom release notes text and
 - the release helper binary at `build/release/checkpp-release-tool`
 - the packaged binary at `build/release/checkpp`
 - the checker executable path at `tools/programs/checkpp`
-- release assets such as `config/rules.yaml` and `config/ignore_paths.txt`
+- release assets such as `config/rules.yaml`, the bundled profile variants under `config/`, and `config/ignore_paths.txt`
 - project-specific helper functions for version lookup, previous release lookup, log validation, checker execution, and release notes subject
 
 ## Shared vs overridden
@@ -54,6 +54,7 @@ The release checker step calls `tools/programs/checkpp` with:
 - the project root
 - the release build directory
 - `config/rules.yaml`
+- bundled profile variants such as `config/rules_c_family.yaml`
 - `--ignore-paths config/ignore_paths.txt`
 
 The shared flow records the checker output in the release log, then validates that the summary reports `Errors: 0` and `Warnings: 0`.

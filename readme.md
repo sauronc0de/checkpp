@@ -1,6 +1,6 @@
 # checkpp
 
-Professional C++ style checker built around a custom `clang-tidy` module and a colorful wrapper CLI.
+Professional C/C++ style checker built around a custom `clang-tidy` module and a colorful wrapper CLI.
 
 ## Quick Start
 
@@ -16,6 +16,8 @@ Pass `rules.yaml` every time. If you do not pass it, the program stops and repor
 
 The links below show example files you can copy or edit:
 - [`rules.yaml`](config/rules.yaml)
+- [`rules_c_family.yaml`](config/rules_c_family.yaml)
+- [`rules_c_family_cpp.yaml`](config/rules_c_family_cpp.yaml)
 - [`ignore_paths.txt`](config/ignore_paths.txt)
 
 ## Build
@@ -66,6 +68,16 @@ You can also add `clang_tidy_checks:` to that YAML file to enable standard `clan
 The bundled rules file already enables a common `clang-tidy` baseline.
 It also enables the custom `company-line-length` release check. Set its `max_length` field in `rules.yaml` to change the limit (defaults to 80 if omitted).
 
+### Available bundled configs
+
+| Config | Use when | Scope |
+|---|---|---|
+| [`config/rules.yaml`](config/rules.yaml) | You want the original project behavior | Existing C++-centric preset; preserved for compatibility |
+| [`config/rules_c_family.yaml`](config/rules_c_family.yaml) | You want the Elausa guideline baseline across C and C++ | Shared C/C++ profile |
+| [`config/rules_c_family_cpp.yaml`](config/rules_c_family_cpp.yaml) | You want the shared Elausa baseline plus C++-only extras | Shared baseline + optional C++ checks |
+
+See [`docs/c_guideline_enforcement.md`](docs/c_guideline_enforcement.md) for the guideline-to-enforcement mapping, overlap strategy, and explicit limitations.
+
 The ignore list is optional. Use [`ignore_paths.txt`](config/ignore_paths.txt) as a reference, then pass your own file with `--ignore-paths` only when you want path filtering.
 
 ## Highlights
@@ -76,6 +88,7 @@ The ignore list is optional. Use [`ignore_paths.txt`](config/ignore_paths.txt) a
 - ANSI-colored readable console output
 - Easy enable/disable and severity remapping per rule
 - Ready to extend with additional checks
+- Supports shared C/C++ guideline profiles without changing the legacy preset
 
 ## Example output
 

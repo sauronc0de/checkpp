@@ -1,15 +1,18 @@
 #pragma once
+
 #include <clang-tidy/ClangTidyCheck.h>
-class FunctionNameCheck : public clang::tidy::ClangTidyCheck
+
+class NoTabsCheck final : public clang::tidy::ClangTidyCheck
 {
 public:
-  FunctionNameCheck(llvm::StringRef checkName,
-                    clang::tidy::ClangTidyContext *context);
+  using clang::tidy::ClangTidyCheck::ClangTidyCheck;
+
   auto registerMatchers(clang::ast_matchers::MatchFinder *finder)
       -> void override;
   auto check(const clang::ast_matchers::MatchFinder::MatchResult &result)
       -> void override;
+  auto onEndOfTranslationUnit() -> void override;
 
 private:
-  std::string checkName_;
+  const clang::SourceManager *sourceManager_ = nullptr;
 };
