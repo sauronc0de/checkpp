@@ -1,94 +1,43 @@
 # checkpp
 
-Professional C/C++ style checker built around a custom `clang-tidy` module and a colorful wrapper CLI.
+`checkpp` is a C/C++ style and rule checker built on top of `clang-tidy`, with custom `company-*` checks and a CLI wrapper for running them against a compilation database.
 
-## Quick Start
+## Start here
 
-```bash
-cmake --preset release
-cmake --build --preset release -j
-./build/release/checkpp <project_root> <compile_commands_dir> <rules.yaml> [--plugin <plugin_path>] [--ignore-paths <ignore_paths.txt>]
-```
+### I want to run `checkpp`
 
-Pass `rules.yaml` every time. If you do not pass it, the program stops and reports the missing input.
+- [Getting started](docs/user/getting-started.md)
+- [Configuration guide](docs/user/configuration.md)
+- [Rule configuration reference](docs/rule_configuration_reference.md)
 
-`ignore_paths.txt` is optional. If you omit it, no paths are ignored.
-
-The links below show example files you can copy or edit:
-- [`rules.yaml`](config/rules.yaml)
-- [`rules_c_family.yaml`](config/rules_c_family.yaml)
-- [`rules_c_family_cpp.yaml`](config/rules_c_family_cpp.yaml)
-- [`ignore_paths.txt`](config/ignore_paths.txt)
-
-## Build
-
-### Release
+Quick example:
 
 ```bash
 cmake --preset release
 cmake --build --preset release -j
-```
-
-The release preset embeds `libCompanyClangTidyModule.so` into `checkpp`, so the executable can run without shipping the plugin separately.
-
-### Development
-
-```bash
-cmake -S . -B build \
-  -DCMAKE_BUILD_TYPE=Release \
-  -DLLVM_DIR=/path/to/lib/cmake/llvm \
-  -DClang_DIR=/path/to/lib/cmake/clang
-cmake --build build -j
-```
-
-You also need `yaml-cpp` installed.
-
-## Run
-
-```bash
-./build/release/checkpp <project_root> <compile_commands_dir> <rules.yaml> [--plugin <plugin_path>] [--ignore-paths <ignore_paths.txt>]
-```
-
-Example with rules and ignore file:
-
-```bash
 ./build/release/checkpp . ./build/release ./config/rules.yaml --ignore-paths ./config/ignore_paths.txt
 ```
 
-The plugin is optional because the release build embeds it. Pass `--plugin` only if you want to use an external module.
+### I want to build or extend the project
 
-You can pass `--ignore-paths` without `--plugin`.
+- [Developer build guide](docs/developer/build.md)
+- [Contributing guide](docs/developer/contributing.md)
+- [Tool development guide](docs/tool-development.md)
+- [Tool guidelines](docs/tool_guidelines.md)
 
-## Rules
+## What `checkpp` does
 
-The rule set is required. Use [`rules.yaml`](config/rules.yaml) as a reference for the expected format, then pass your own file as the third CLI argument.
+- Runs standard `clang-tidy` checks plus built-in `company-*` checks
+- Reads `compile_commands.json` from your build directory
+- Uses YAML rules files for check selection and metadata
+- Supports severity remapping, rule IDs, and optional ignored paths
 
-You can also add `clang_tidy_checks:` to that YAML file to enable standard `clang-tidy` checks directly.
+## Bundled configuration examples
 
-The bundled rules file already enables a common `clang-tidy` baseline.
-It also enables the custom `company-line-length` release check. Set its `max_length` field in `rules.yaml` to change the limit (defaults to 80 if omitted).
-
-### Available bundled configs
-
-| Config | Use when | Scope |
-|---|---|---|
-| [`config/rules.yaml`](config/rules.yaml) | You want the original project behavior | Existing C++-centric preset; preserved for compatibility |
-| [`config/rules_c_family.yaml`](config/rules_c_family.yaml) | You want the Elausa guideline baseline across C and C++ | Shared C/C++ profile |
-| [`config/rules_c_family_cpp.yaml`](config/rules_c_family_cpp.yaml) | You want the shared Elausa baseline plus C++-only extras | Shared baseline + optional C++ checks |
-
-See [`docs/c_guideline_enforcement.md`](docs/c_guideline_enforcement.md) for the guideline-to-enforcement mapping, overlap strategy, and explicit limitations.
-
-The ignore list is optional. Use [`ignore_paths.txt`](config/ignore_paths.txt) as a reference, then pass your own file with `--ignore-paths` only when you want path filtering.
-
-## Highlights
-
-- Uses Clang AST / `clang-tidy` custom checks
-- Reads a `compile_commands.json` compilation database
-- Rule config in YAML
-- ANSI-colored readable console output
-- Easy enable/disable and severity remapping per rule
-- Ready to extend with additional checks
-- Supports shared C/C++ guideline profiles without changing the legacy preset
+- [`config/rules.yaml`](config/rules.yaml) — legacy project baseline
+- [`config/rules_c_family.yaml`](config/rules_c_family.yaml) — shared C/C++ profile
+- [`config/rules_c_family_cpp.yaml`](config/rules_c_family_cpp.yaml) — shared C/C++ profile with extra C++ rules
+- [`config/ignore_paths.txt`](config/ignore_paths.txt) — example ignore list for `--ignore-paths`
 
 ## Example output
 
@@ -99,9 +48,3 @@ The ignore list is optional. Use [`ignore_paths.txt`](config/ignore_paths.txt) a
 [WARNING] Rule 12.1  company-bool-prefix              src/player.cpp:33
           boolean variable 'visible' should start with is/has/can/should
 ```
-
-## Notes
-
-- The plugin is a real `clang-tidy` extension structure.
-- Several checks are fully implemented.
-- Some advanced checks are scaffolded and ready to refine further depending on your exact codebase conventions.
