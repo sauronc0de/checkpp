@@ -23,11 +23,11 @@ metadata:
 
 ## Required Loop
 
-1. Run `tools/tasks/run.sh` from the repository root.
+1. Run `/run.sh` from the repository root.
 2. Inspect the relevant checker log immediately after the run.
 3. Treat every warning line and every error line as a failed iteration, even if the command exits successfully.
 4. Fix the smallest underlying code, config, or build issue.
-5. Run `tools/tasks/run.sh` again.
+5. Run `run.sh` again.
 6. Repeat until the checker log has zero warnings and zero errors.
 
 ## Stop Conditions
@@ -45,5 +45,5 @@ metadata:
 ## Command
 
 ```bash
-tools/tasks/run.sh
+run.sh
 ```

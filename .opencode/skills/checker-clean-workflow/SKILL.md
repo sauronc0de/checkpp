@@ -16,7 +16,7 @@ metadata:
 
 ## Critical Patterns
 
-- Always start from `tools/tasks/run.sh` in this repository.
+- Always start from `run.sh` in this repository.
 - After every run, inspect `build/release/checker.log`.
 - Treat any warning or error line in that log as a failed run, even if the process exits successfully.
 - Fix the underlying code/config issue, then run the checker again.
@@ -24,10 +24,10 @@ metadata:
 
 ## Exact Loop
 
-1. Run `tools/tasks/run.sh` from the workspace root.
+1. Run `run.sh` from the workspace root.
 2. Read `build/release/checker.log`.
 3. If the log has warnings or errors, fix the smallest root cause.
-4. Re-run `tools/tasks/run.sh`.
+4. Re-run `run.sh`.
 5. Repeat until the log is clean.
 
 ## Stop Conditions
@@ -39,7 +39,7 @@ metadata:
 ## Commands
 
 ```bash
-tools/tasks/run.sh
+run.sh
 ```
 
 ## Notes

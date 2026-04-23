@@ -16,7 +16,7 @@ metadata:
 
 ## Critical Patterns
 
-- Always run `tools/tasks/run.sh` from the repository root.
+- Always run `run.sh` from the repository root.
 - Inspect `build/release/checker.log` after every run.
 - Treat any warning or error line in that log as a failed run, even if the command exits successfully.
 - Fix the underlying repo issue, not the log symptom.
@@ -24,11 +24,11 @@ metadata:
 
 ## Required Loop
 
-1. Run `tools/tasks/run.sh`.
+1. Run `run.sh`.
 2. Read `build/release/checker.log`.
 3. If the log contains warnings or errors, treat the iteration as incomplete.
 4. Fix the smallest underlying cause in the repository.
-5. Run `tools/tasks/run.sh` again.
+5. Run `run.sh` again.
 6. Repeat until the log contains no warnings and no errors.
 
 ## Stop Conditions
@@ -46,7 +46,7 @@ metadata:
 ## Commands
 
 ```bash
-tools/tasks/run.sh
+run.sh
 ```
 
 ## Notes

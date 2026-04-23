@@ -4,17 +4,17 @@
 Use this skill when you need to verify or restore a clean checker run in this repository.
 
 ## Workflow
-1. Run `tools/tasks/run.sh` with the relevant preset.
+1. Run `run.sh` with the relevant preset.
 2. Inspect the generated checker log before assuming success.
 3. Treat any warning, error, failed check, missing output, or ambiguous log line as failure/incomplete.
 4. Fix the underlying issue.
-5. Rerun `tools/tasks/run.sh`.
+5. Rerun `run.sh`.
 6. Repeat until the log is clean.
 
 ## Log Paths
 - Do not assume the release log lives at `build/release/checker.log`.
 - The actual release workflow writes to `build/release/release-work/checker.log`.
-- `tools/tasks/run.sh` writes `build/<preset>/checkpp_style_check.log`.
+- `run.sh` writes `build/<preset>/checkpp_style_check.log`.
 
 Always inspect the log path produced by the command you ran.
 
