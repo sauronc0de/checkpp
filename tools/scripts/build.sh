@@ -1,12 +1,75 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [ "$#" -lt 2 ]; then
-  echo "Usage: $0 [TARGET] [PRESET]"
-  echo "Examples:"
-  echo "  $0 all release"
-  echo "  $0 all develop"
-  echo "  $0 checkpp develop"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
+print_version() {
+  local version
+  version="$(sed -nE 's/^project\(checkpp VERSION ([0-9]+\.[0-9]+\.[0-9]+).*$/\1/p' "${PROJECT_ROOT}/CMakeLists.txt")"
+  if [ -z "${version}" ]; then
+    printf 'Failed to detect the project version from %s\n' "${PROJECT_ROOT}/CMakeLists.txt" >&2
+    exit 1
+  fi
+  printf '%s\n' "${version}"
+}
+
+usage() {
+  cat <<EOF
+SYNOPSIS
+    $0 [--help|-h] [--version|-v] TARGET PRESET
+DESCRIPTION
+    Build a CMake target with the selected preset and save the full log to
+    build/PRESET/build.log.
+===============================================================
+OPTIONS
+    -h, --help                    Print this help.
+    -v, --version                 Print the tool version.
+===============================================================
+PARAMETERS
+    TARGET                        Build target name. Use all to build the
+                                  preset default target.
+                                  Example: all
+    PRESET                        CMake preset used for configure/build output.
+                                  Example: release
+===============================================================
+EXAMPLES
+    $0 all release
+    $0 all develop
+    $0 checkpp develop
+===============================================================
+DEPENDENCIES
+    cmake, nproc, tee, grep
+===============================================================
+IMPLEMENTATION
+    version         $(print_version)
+    project         checkpp
+    location        tools/scripts/build.sh
+EOF
+}
+
+short_help() {
+  printf '%s\n' "Build a CMake target and log output; example: $0 all release; dependencies: cmake and nproc."
+}
+
+if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
+  usage
+  exit 0
+fi
+
+if [ "${1:-}" = "--short-help" ]; then
+  short_help
+  exit 0
+fi
+
+if [ "${1:-}" = "--version" ] || [ "${1:-}" = "-v" ]; then
+  print_version
+  exit 0
+fi
+
+if [ "$#" -ne 2 ]; then
+  printf 'Expected exactly 2 arguments: TARGET PRESET.\n' >&2
+  usage >&2
   exit 1
 fi
 
@@ -47,7 +110,7 @@ echo "Build completed successfully"
 
 } > >(tee "${log_file}") 2>&1
 
-first_error_line="$(grep -inm1 'error' "${log_file}" | cut -d: -f1 || true)"
+first_error_line="$(grep -Einm1 '(^|[^[:alnum:]_-])(fatal error:|error:)' "${log_file}" | cut -d: -f1 || true)"
 if [ -n "${first_error_line}" ]; then
   echo "First error at ${log_file}:${first_error_line}"
 fi

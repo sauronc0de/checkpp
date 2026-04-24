@@ -71,6 +71,16 @@ RUN set -eux; \
     rm -rf /var/lib/apt/lists/*
 
 ###############################################################################
+# Tools installation
+###############################################################################
+ARG CHECKPP_VERSION=v0.0.4
+ARG CHECKPP_ASSET=checkpp-v0.0.4
+RUN mkdir -p ${WORKSPACE_DIR}/tools/programs \
+    && curl -L \
+    -o ${WORKSPACE_DIR}/tools/programs/checkpp \
+    "https://github.com/sauronc0de/checkpp/releases/download/${CHECKPP_VERSION}/${CHECKPP_ASSET}"
+
+###############################################################################
 # User and permissions configuration
 ###############################################################################
 RUN set -eux; \
@@ -138,3 +148,4 @@ RUN gentle-ai install \
     --agents opencode \
     --preset custom \
     --components engram,sdd,skills,context7,gga
+

@@ -16,11 +16,43 @@ release_common_die() {
 
 release_common_usage() {
   cat <<EOF
-Usage: source this file from a project-specific release wrapper.
+SYNOPSIS
+    source tools/scripts/release_common.sh
 
-This file provides the shared release flow used by tools/tasks/release.sh.
-The checkpp wrapper owns project-specific paths, helper binaries, and the checker binary.
+DESCRIPTION
+    Shared release helpers used by tools/scripts/release.sh.
+    The checkpp wrapper owns project-specific paths, helper binaries, and the checker binary.
+
+OPTIONS
+    -h, --help          Print this help.
+    --short-help        Print a one-line summary.
+    -v, --version       Print the tool version.
+
+EXAMPLES
+    source tools/scripts/release_common.sh
+
+IMPLEMENTATION
+    version         $(release_common_print_version)
+    location        tools/scripts/release_common.sh
 EOF
+}
+
+release_common_short_help() {
+  printf '%s\n' 'Shared release helpers for release.sh; example: source tools/scripts/release_common.sh.'
+}
+
+release_common_print_version() {
+  local version_file
+  local version
+
+  version_file="$(release_common_project_root)/CMakeLists.txt"
+  version="$(sed -nE 's/^project\(checkpp VERSION ([0-9]+\.[0-9]+\.[0-9]+).*$/\1/p' "$version_file")"
+  if [ -z "$version" ]; then
+    printf 'Failed to detect the project version from %s\n' "$version_file" >&2
+    return 1
+  fi
+
+  printf '%s\n' "$version"
 }
 
 release_common_log() {
@@ -408,11 +440,26 @@ release_main() {
 }
 
 if [ "${BASH_SOURCE[0]}" = "$0" ]; then
-  if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
-    release_common_usage
-    exit 0
-  fi
-
-  release_common_usage >&2
-  exit 1
+  case "${1:-}" in
+    -h|--help)
+      release_common_usage
+      exit 0
+      ;;
+    --short-help)
+      release_common_short_help
+      exit 0
+      ;;
+    -v|--version)
+      release_common_print_version
+      exit 0
+      ;;
+    "")
+      release_common_usage >&2
+      exit 1
+      ;;
+    *)
+      release_common_usage >&2
+      exit 1
+      ;;
+  esac
 fi

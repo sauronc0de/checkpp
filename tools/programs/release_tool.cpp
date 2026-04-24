@@ -81,6 +81,11 @@ std::string current_version()
   return match[1].str();
 }
 
+void print_version()
+{
+  std::cout << current_version() << '\n';
+}
+
 std::string previous_release_ref(const std::string &tag)
 {
   const std::string describe_cmd = "git describe --tags --abbrev=0 --match 'v[0-9]*' '" + tag + "^' 2>/dev/null";
@@ -190,14 +195,54 @@ void verify_checker_output(const std::string &path)
   }
 }
 
-void print_usage()
+void print_short_help()
 {
-  std::cout << "Usage: checkpp-release-tool <command> [args]\n"
-            << "Commands:\n"
-            << "  project-version\n"
-            << "  previous-release-ref <tag>\n"
-            << "  assert-no-warning-lines <log-file>\n"
-            << "  verify-checker-output <log-file>\n";
+  std::cout << "checkpp release helper commands; example: checkpp-release-tool project-version; dependency: git for previous-release-ref\n";
+}
+
+void print_usage(std::ostream &out, const std::string &program_name)
+{
+  out << "SYNOPSIS:\n"
+      << "    " << program_name << " [--help|-h] [--version|-v] <command> [args]\n"
+      << "DESCRIPTION:\n"
+      << "    Provide helper commands for the checkpp release flow.\n"
+      << "===============================================================\n"
+      << "OPTIONS:\n"
+      << "    -h, --help                    Print this help.\n"
+      << "    -v, --version                 Print the tool version.\n"
+      << "===============================================================\n"
+      << "PARAMETERS:\n"
+      << "    <command>                     One of the commands listed below.\n"
+      << "    <tag>                         Release tag used by previous-release-ref.\n"
+      << "                                  Example: v0.1.0\n"
+      << "    <log-file>                    Readable build or checker output file used\n"
+      << "                                  by the log validation commands.\n"
+      << "                                  Example: build/release/build.log\n"
+      << "===============================================================\n"
+      << "COMMANDS:\n"
+      << "    project-version\n"
+      << "        Print the project version from CMakeLists.txt.\n"
+      << "    previous-release-ref <tag>\n"
+      << "        Print the previous release tag or the first commit if none exists.\n"
+      << "    assert-no-warning-lines <log-file>\n"
+      << "        Fail if the build log contains warning lines.\n"
+      << "    verify-checker-output <log-file>\n"
+      << "        Fail if the checker summary reports non-zero errors or warnings.\n"
+      << "===============================================================\n"
+      << "EXAMPLES:\n"
+      << "    " << program_name << " project-version\n"
+      << "    " << program_name << " previous-release-ref v0.1.0\n"
+      << "    " << program_name << " assert-no-warning-lines build/release/build.log\n"
+      << "    " << program_name << " verify-checker-output build/release/checkpp_style_check.log\n"
+      << "===============================================================\n"
+      << "DEPENDENCIES:\n"
+      << "    git (for previous-release-ref), readable log files, project root\n"
+      << "    CMakeLists.txt\n"
+      << "===============================================================\n"
+      << "IMPLEMENTATION:\n"
+      << "    version         " << current_version() << "\n"
+      << "    project         checkpp\n"
+      << "    location        tools/programs/release_tool.cpp\n";
 }
 
 } // namespace
@@ -206,9 +251,29 @@ int main(int argc, char **argv)
 {
   try
   {
+    if(argc >= 2)
+    {
+      const std::string first_arg = argv[1];
+      if(first_arg == "--help" || first_arg == "-h")
+      {
+        print_usage(std::cout, argv[0]);
+        return 0;
+      }
+      if(first_arg == "--short-help")
+      {
+        print_short_help();
+        return 0;
+      }
+      if(first_arg == "--version" || first_arg == "-v")
+      {
+        print_version();
+        return 0;
+      }
+    }
+
     if(argc < 2)
     {
-      print_usage();
+      print_usage(std::cerr, argv[0]);
       return 1;
     }
 
@@ -252,13 +317,6 @@ int main(int argc, char **argv)
       verify_checker_output(argv[2]);
       return 0;
     }
-
-    if(command == "--help" || command == "-h")
-    {
-      print_usage();
-      return 0;
-    }
-
     fail("unknown command: " + command);
   }
   catch(const std::exception &ex)

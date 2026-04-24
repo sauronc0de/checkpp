@@ -1,0 +1,26 @@
+version: 1
+
+defaults:
+  mode: draft
+  publish: none
+  local_review_output_dir: docs/review
+  github_issue_skill_command: /sc-gh-issue
+  milestone: docs/release_milestone.md
+
+processes:
+  tools:
+    guidelines:
+      - docs/tools_guidelines.md
+
+    create:
+        type: Shell script or C++ code
+        
+    actions:
+      review:
+        inputs:
+            - tools/
+
+        outputs:
+          naming: review-tools{milestone_suffix}
+          template_file: none
+    

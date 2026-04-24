@@ -17,12 +17,22 @@ RELEASE_PRESET="release"
 RELEASE_VERSION_SOURCE="CMakeLists.txt"
 RELEASE_HELPER="${PROJECT_ROOT}/build/${RELEASE_PRESET}/checkpp-release-tool"
 RELEASE_PACKAGE_BINARY_PATH="${PROJECT_ROOT}/build/${RELEASE_PRESET}/checkpp"
-RELEASE_CHECKER_BINARY_PATH="${PROJECT_ROOT}/tools/programs/checkpp"
+RELEASE_CHECKER_BINARY_PATH="${RELEASE_PACKAGE_BINARY_PATH}"
 RELEASE_RULES_PATH="${PROJECT_ROOT}/config/rules.yaml"
 RELEASE_IGNORE_PATHS_PATH="${PROJECT_ROOT}/config/ignore_paths.txt"
 RELEASE_PACKAGE_BINARY_ASSET_NAME="checkpp"
 RELEASE_RULES_ASSET_NAME="rules"
 RELEASE_IGNORE_PATHS_ASSET_NAME="ignore_paths.txt"
+
+print_version() {
+  local version
+  version="$(sed -nE 's/^project\(checkpp VERSION ([0-9]+\.[0-9]+\.[0-9]+).*$/\1/p' "${PROJECT_ROOT}/CMakeLists.txt")"
+  if [ -z "${version}" ]; then
+    printf 'Failed to detect the project version from %s\n' "${PROJECT_ROOT}/CMakeLists.txt" >&2
+    exit 1
+  fi
+  printf '%s\n' "${version}"
+}
 
 release_package_extra_assets() {
   local release_dir="$1"
@@ -64,16 +74,50 @@ release_release_notes_subject() {
 
 usage() {
   cat <<EOF
-Usage: $0
-
-checkpp release entrypoint.
-This script supplies checkpp-specific paths and hooks, then runs the shared flow in
-tools/tasks/release_common.sh.
+SYNOPSIS
+    $0 [--help|-h] [--version|-v]
+DESCRIPTION
+    Run the checkpp release entrypoint. This wrapper supplies project-specific
+    paths and hooks, then delegates the flow to tools/scripts/release_common.sh.
+===============================================================
+OPTIONS
+    -h, --help                    Print this help.
+    -v, --version                 Print the tool version.
+===============================================================
+PARAMETERS
+    none                          This command does not accept positional
+                                  parameters or extra options.
+===============================================================
+EXAMPLES
+    $0
+===============================================================
+DEPENDENCIES
+    git, gh, cmake, tools/scripts/release_common.sh,
+    build/release/checkpp-release-tool
+===============================================================
+IMPLEMENTATION
+    version         $(print_version)
+    project         checkpp
+    location        tools/scripts/release.sh
 EOF
+}
+
+short_help() {
+  printf '%s\n' "Run the checkpp release flow; example: $0; dependencies: git, gh, cmake, and build/release/checkpp-release-tool."
 }
 
 if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
   usage
+  exit 0
+fi
+
+if [ "${1:-}" = "--short-help" ]; then
+  short_help
+  exit 0
+fi
+
+if [ "${1:-}" = "--version" ] || [ "${1:-}" = "-v" ]; then
+  print_version
   exit 0
 fi
 

@@ -4,27 +4,92 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
+print_version() {
+  local version
+  version="$(sed -nE 's/^project\(checkpp VERSION ([0-9]+\.[0-9]+\.[0-9]+).*$/\1/p' "${PROJECT_ROOT}/CMakeLists.txt")"
+  if [ -z "${version}" ]; then
+    printf 'Failed to detect the project version from %s\n' "${PROJECT_ROOT}/CMakeLists.txt" >&2
+    exit 1
+  fi
+  printf '%s\n' "${version}"
+}
+
+usage() {
+  cat <<EOF
+SYNOPSIS
+    $0 [--help|-h] [--version|-v] [--build-only] [PRESET]
+DESCRIPTION
+    Build checkpp with the selected preset, then optionally run the built
+    checker against this repository.
+===============================================================
+OPTIONS
+    --build-only                  Configure and build only; skip running the
+                                  checker after the build completes.
+    -h, --help                    Print this help.
+    -v, --version                 Print the tool version.
+===============================================================
+PARAMETERS
+    PRESET                        Optional build preset. Defaults to release.
+                                  Example: develop
+===============================================================
+EXAMPLES
+    $0
+    $0 develop
+    $0 release --build-only
+===============================================================
+DEPENDENCIES
+    cmake, nproc, tee, a configured preset build tree, and the generated
+    checkpp binary for run mode
+===============================================================
+IMPLEMENTATION
+    version         $(print_version)
+    project         checkpp
+    location        tools/scripts/run.sh
+EOF
+}
+
+short_help() {
+  printf '%s\n' "Build and optionally run checkpp; example: $0 develop; dependencies: cmake and a configured preset."
+}
+
 preset="release"
+preset_set="NO"
 build_only="NO"
 
-if [ "$#" -ge 1 ]; then
-  if [ "$1" == "--help" ] || [ "$1" == "-h" ]; then
-    echo "Usage: $0 [PRESET] [--build-only]"
-    echo "Available presets: release, develop"
-    echo "Default preset: release"
-    echo ""
-    echo "Examples:"
-    echo "  $0            # Build release, then run checkpp"
-    echo "  $0 develop    # Build develop, then run"
-    echo "  $0 release --build-only  # Build release only"
-    exit 0
-  fi
-  preset="$1"
-fi
-
-if [ "$#" -ge 2 ] && [ "$2" == "--build-only" ]; then
-  build_only="YES"
-fi
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --help|-h)
+      usage
+      exit 0
+      ;;
+    --short-help)
+      short_help
+      exit 0
+      ;;
+    --version|-v)
+      print_version
+      exit 0
+      ;;
+    --build-only)
+      build_only="YES"
+      ;;
+    --*)
+      printf 'Unknown option: %s\n' "$1" >&2
+      usage >&2
+      exit 1
+      ;;
+    *)
+      if [ "${preset_set}" = "YES" ]; then
+        printf 'Unexpected positional argument: %s\n' "$1" >&2
+        usage >&2
+        exit 1
+      fi
+      preset="$1"
+      preset_set="YES"
+      ;;
+  esac
+  shift
+done
 
 JOBS="${CMAKE_BUILD_PARALLEL_LEVEL:-$(nproc)}"
 build_dir="${PROJECT_ROOT}/build/${preset}"

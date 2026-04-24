@@ -4,6 +4,49 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
+print_version() {
+  local version
+  version="$(sed -nE 's/^project\(checkpp VERSION ([0-9]+\.[0-9]+\.[0-9]+).*$/\1/p' "${PROJECT_ROOT}/CMakeLists.txt")"
+  if [ -z "${version}" ]; then
+    printf 'Failed to detect the project version from %s\n' "${PROJECT_ROOT}/CMakeLists.txt" >&2
+    return 1
+  fi
+  printf '%s\n' "${version}"
+}
+
+usage() {
+  cat <<EOF
+SYNOPSIS
+    $0 [--help|-h] [--version|-v]
+DESCRIPTION
+    Report branch, worktree, ref, graph, and pull request status for the
+    current repository.
+===============================================================
+OPTIONS
+    -h, --help                    Print this help.
+    -v, --version                 Print the tool version.
+===============================================================
+PARAMETERS
+    none                          This command does not accept positional
+                                  parameters or extra options.
+===============================================================
+EXAMPLES
+    $0
+===============================================================
+DEPENDENCIES
+    git, gh (optional for GitHub PR status details)
+===============================================================
+IMPLEMENTATION
+    version         $(print_version)
+    project         checkpp
+    location        tools/scripts/repo_status.sh
+EOF
+}
+
+short_help() {
+  printf '%s\n' "Summarize repo/worktree/PR status; example: $0; dependencies: git and optional gh."
+}
+
 heading() {
   printf '\n== %s ==\n' "$1"
 }
@@ -216,6 +259,27 @@ print_explanation() {
 }
 
 main() {
+  if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
+    usage
+    return 0
+  fi
+
+  if [ "${1:-}" = "--short-help" ]; then
+    short_help
+    return 0
+  fi
+
+  if [ "${1:-}" = "--version" ] || [ "${1:-}" = "-v" ]; then
+    print_version
+    return 0
+  fi
+
+  if [ "$#" -gt 0 ]; then
+    printf 'This command does not accept positional arguments.\n' >&2
+    usage >&2
+    return 1
+  fi
+
   printf 'Repository status for %s\n' "${PROJECT_ROOT}"
   printf 'Generated: %s\n' "$(date -Iseconds)"
 
