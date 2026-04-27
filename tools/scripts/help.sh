@@ -222,3 +222,5 @@ printf '\n'
 sort -u "$tmp_file" | while IFS= read -r tool; do
     run_tool "$tool"
 done
+
+printf '\n'
