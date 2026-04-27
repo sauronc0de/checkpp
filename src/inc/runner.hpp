@@ -38,7 +38,9 @@ public:
            const std::filesystem::path &pluginPath) const -> int;
 
 private:
-  [[nodiscard]] auto collectFiles(const std::filesystem::path &root) const
+  [[nodiscard]] auto collectFiles(const std::filesystem::path &root,
+                                  const std::filesystem::path &compileDbDir)
+      const
       -> std::vector<std::filesystem::path>;
   [[nodiscard]] static auto buildChecksArgument(
       const std::vector<std::string> &checks) -> std::string;

@@ -153,6 +153,29 @@ auto shouldIgnorePath(const fs::path &path,
       });
 }
 
+auto isWithinDirectory(const fs::path &path, const fs::path &directory) -> bool
+{
+  if(directory.empty())
+  {
+    return false;
+  }
+
+  const fs::path kNormalizedPath = path.lexically_normal();
+  const fs::path kNormalizedDirectory = directory.lexically_normal();
+
+  auto pathIt = kNormalizedPath.begin();
+  auto directoryIt = kNormalizedDirectory.begin();
+  for(; directoryIt != kNormalizedDirectory.end(); ++directoryIt, ++pathIt)
+  {
+    if(pathIt == kNormalizedPath.end() || *pathIt != *directoryIt)
+    {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 auto colorForSeverity(Severity severity) -> const char *
 {
   switch(severity)
@@ -403,7 +426,9 @@ Runner::Runner(const Config &config, RunnerOutputOptions outputOptions)
                                       outputOptions_.plainText_;
 }
 
-auto Runner::collectFiles(const fs::path &root) const -> std::vector<fs::path>
+auto Runner::collectFiles(const fs::path &root,
+                          const fs::path &compileDbDir) const
+    -> std::vector<fs::path>
 {
   std::vector<fs::path> kFiles;
   fs::recursive_directory_iterator iterator(root);
@@ -411,6 +436,17 @@ auto Runner::collectFiles(const fs::path &root) const -> std::vector<fs::path>
   while(iterator != kEnd)
   {
     const fs::directory_entry &entry = *iterator;
+    if(isWithinDirectory(entry.path(), compileDbDir))
+    {
+      if(entry.is_directory())
+      {
+        iterator.disable_recursion_pending();
+      }
+
+      ++iterator;
+      continue;
+    }
+
     if(entry.is_directory() &&
        shouldIgnorePath(entry.path(), config_.ignoredPathFilters()))
     {
@@ -747,7 +783,7 @@ auto Runner::printFindings(const std::vector<Finding> &findings,
 auto Runner::run(const fs::path &projectRoot, const fs::path &compileDbDir,
                  const fs::path &pluginPath) const -> int
 {
-  const auto kFiles = collectFiles(projectRoot);
+  const auto kFiles = collectFiles(projectRoot, compileDbDir);
   if(kFiles.empty())
   {
     std::cout << "No C/C++ files found.\n";
