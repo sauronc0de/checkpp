@@ -300,10 +300,10 @@ release_common_package_assets() {
 
   mkdir -p "$artifact_dir"
 
-  release_common_copy_asset "$RELEASE_PACKAGE_BINARY_PATH" "$artifact_dir/${RELEASE_PACKAGE_BINARY_ASSET_NAME}-${tag}"
+  release_common_copy_asset "$RELEASE_PACKAGE_BINARY_PATH" "$artifact_dir/${RELEASE_PACKAGE_BINARY_ASSET_NAME}"
   release_common_copy_asset "$RELEASE_RULES_PATH" "$artifact_dir/${RELEASE_RULES_ASSET_NAME}-${tag}.yaml"
 
-  release_assets+=("$artifact_dir/${RELEASE_PACKAGE_BINARY_ASSET_NAME}-${tag}")
+  release_assets+=("$artifact_dir/${RELEASE_PACKAGE_BINARY_ASSET_NAME}")
   release_assets+=("$artifact_dir/${RELEASE_RULES_ASSET_NAME}-${tag}.yaml")
 
   if [ -n "${RELEASE_IGNORE_PATHS_PATH:-}" ] && [ -f "$RELEASE_IGNORE_PATHS_PATH" ]; then
