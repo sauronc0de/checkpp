@@ -1,6 +1,6 @@
 ---
-name: sc-issue-work
-description: work through current github issues for the current repository and milestone. use when the user invokes /sc-issue-work or @sc-issue-work to inspect current milestone issues assigned to the local git user, ignore issues not assigned to that identity, comment blockers through /sc-gh-issue, implement feasible work, use /sc-create when a predefined process applies, and run /sc-review to validate completed work with minimal chat interruption.
+name: sc-work
+description: work through current github issues for the current repository and milestone. use when the user invokes /sc-work or @sc-work to inspect current milestone issues assigned to the local git user, ignore issues not assigned to that identity, comment blockers through /sc-gh-issue, implement feasible work, use /sc-create when a predefined process applies, and run /sc-review to validate completed work with minimal chat interruption.
 metadata:
   version: "0.0.0"
 ---
@@ -14,7 +14,7 @@ Autonomously process current milestone GitHub issues assigned to the local Git i
 Support:
 
 ```bash
-/sc-issue-work [--milestone "<milestone>"] [--limit <n>]
+/sc-work [--milestone "<milestone>"] [--limit <n>]
 ```
 
 Do not invent extra flags.
