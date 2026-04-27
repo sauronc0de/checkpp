@@ -23,13 +23,14 @@ The release preset embeds the custom `clang-tidy` module into the executable, so
 ## Run the tool
 
 ```bash
-./build/release/checkpp <project_root> <compile_commands_dir> <rules.yaml> [--plugin <plugin_path>] [--ignore-paths <ignore_paths.txt>]
+./build/release/checkpp [--plugin <plugin_path>] [--ignore-paths <ignore_paths.txt>] [--plain-text|--no-plain-text] [--verbose] <project_root> <compile_commands_dir> <rules.yaml>
 ```
 
 Example:
 
 ```bash
 ./build/release/checkpp . ./build/release ./config/rules.yaml --ignore-paths ./config/ignore_paths.txt
+./build/release/checkpp --plain-text . ./build/release ./config/rules.yaml
 ```
 
 ## Required inputs
@@ -63,6 +64,14 @@ Example template:
 ### `--plugin`
 
 Use `--plugin` only when you want to load an external `clang-tidy` module instead of relying on the embedded release build.
+
+### `--plain-text`
+
+Use `--plain-text` to disable ANSI colors and the rich progress line explicitly. This is useful for CI logs, plain terminals, or when you want deterministic text output without relying on `NO_COLOR`.
+
+### `--verbose`
+
+Use `--verbose` to print validation and scan diagnostics to stderr without changing the findings written to stdout.
 
 ## Typical workflow
 

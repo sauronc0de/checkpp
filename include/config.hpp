@@ -19,7 +19,8 @@ class Config
 {
 public:
   auto loadFromFile(const std::string &path,
-                    const std::filesystem::path &ignorePathsPath = {}) -> bool;
+                    const std::filesystem::path &ignorePathsPath = {},
+                    std::string *errorMessage = nullptr) -> bool;
   auto getRule(const std::string &checkName) const -> RuleSetting;
   auto clangTidyChecks() const -> const std::vector<std::string> &;
   auto enabledChecks() const -> std::vector<std::string>;

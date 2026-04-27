@@ -83,17 +83,23 @@ auto loadRules(const YAML::Node &root,
 }
 
 auto loadIgnorePaths(const std::filesystem::path &ignorePathsPath,
-                     std::vector<std::string> &ignoredPathFilters) -> void
+                     std::vector<std::string> &ignoredPathFilters,
+                     std::string *errorMessage) -> bool
 {
   if(ignorePathsPath.empty())
   {
-    return;
+    return true;
   }
 
   std::ifstream ignorePathsFile(ignorePathsPath);
   if(!ignorePathsFile.is_open())
   {
-    return;
+    if(errorMessage != nullptr)
+    {
+      *errorMessage = "failed to open ignore-paths file: " +
+                      ignorePathsPath.string();
+    }
+    return false;
   }
 
   std::string line;
@@ -107,27 +113,44 @@ auto loadIgnorePaths(const std::filesystem::path &ignorePathsPath,
 
     ignoredPathFilters.push_back(kTrimmedLine);
   }
+
+  return true;
 }
 } // namespace
 
 auto Config::loadFromFile(const std::string &path,
-                          const std::filesystem::path &ignorePathsPath) -> bool
+                          const std::filesystem::path &ignorePathsPath,
+                          std::string *errorMessage) -> bool
 {
-  YAML::Node root = YAML::LoadFile(path);
-  if(!root["checks"] && !root["clang_tidy_checks"])
+  try
   {
+    YAML::Node root = YAML::LoadFile(path);
+    if(!root["checks"] && !root["clang_tidy_checks"])
+    {
+      if(errorMessage != nullptr)
+      {
+        *errorMessage =
+            "rules file must define at least one of: checks, clang_tidy_checks";
+      }
+      return false;
+    }
+
+    rules_.clear();
+    clangTidyChecks_.clear();
+    ignoredPathFilters_.clear();
+
+    loadClangTidyChecks(root, clangTidyChecks_);
+    loadRules(root, rules_);
+    return loadIgnorePaths(ignorePathsPath, ignoredPathFilters_, errorMessage);
+  }
+  catch(const YAML::Exception &exception)
+  {
+    if(errorMessage != nullptr)
+    {
+      *errorMessage = exception.what();
+    }
     return false;
   }
-
-  rules_.clear();
-  clangTidyChecks_.clear();
-  ignoredPathFilters_.clear();
-
-  loadClangTidyChecks(root, clangTidyChecks_);
-  loadRules(root, rules_);
-  loadIgnorePaths(ignorePathsPath, ignoredPathFilters_);
-
-  return true;
 }
 
 auto Config::clangTidyChecks() const -> const std::vector<std::string> &

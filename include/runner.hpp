@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 struct Finding
@@ -17,10 +18,20 @@ struct Finding
   std::string message_;
 };
 
+struct RunnerOutputOptions
+{
+  bool useColor_ = false;
+  bool plainText_ = false;
+  bool verbose_ = false;
+  bool interactiveProgress_ = false;
+  bool plainTextProgress_ = false;
+};
+
 class Runner
 {
 public:
-  explicit Runner(const Config &config);
+  explicit Runner(const Config &config,
+                  RunnerOutputOptions outputOptions = {});
   // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
   auto run(const std::filesystem::path &projectRoot,
            const std::filesystem::path &compileDbDir,
@@ -43,8 +54,13 @@ private:
                                 const RunPaths &paths,
                                 bool &commandFailed) const
       -> std::vector<Finding>;
+  [[nodiscard]] auto scanFiles(const std::vector<std::filesystem::path> &files,
+                               const RunPaths &paths) const
+      -> std::pair<std::vector<Finding>, bool>;
   static auto printFindings(
       const std::vector<Finding> &findings,
-      const std::vector<std::filesystem::path> &checkedFiles) -> void;
+      const std::vector<std::filesystem::path> &checkedFiles,
+      const RunnerOutputOptions &outputOptions) -> void;
   const Config &config_;
+  RunnerOutputOptions outputOptions_;
 };

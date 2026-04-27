@@ -43,5 +43,4 @@ If you add or change rules, keep the user-facing docs aligned:
 
 For tooling-specific conventions, see:
 
-- [Tool development guide](../tool-development.md)
-- [Tool guidelines](../tool_guidelines.md)
+- [Tool guidelines](../tools_guidelines.md)

@@ -16,14 +16,14 @@ Quick example:
 cmake --preset release
 cmake --build --preset release -j
 ./build/release/checkpp . ./build/release ./config/rules.yaml --ignore-paths ./config/ignore_paths.txt
+./build/release/checkpp --plain-text . ./build/release ./config/rules.yaml
 ```
 
 ### I want to build or extend the project
 
 - [Developer build guide](docs/developer/build.md)
 - [Contributing guide](docs/developer/contributing.md)
-- [Tool development guide](docs/tool-development.md)
-- [Tool guidelines](docs/tool_guidelines.md)
+- [Tool guidelines](docs/tools_guidelines.md)
 
 ## What `checkpp` does
 
