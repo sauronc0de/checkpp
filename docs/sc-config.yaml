@@ -12,10 +12,10 @@ processes:
     guidelines:
       - docs/tools_guidelines.md
 
-    create:
-        type: Shell script or C++ code
-        
     actions:
+      create:
+        type: Shell script or C++ code
+
       review:
         inputs:
             - tools/
