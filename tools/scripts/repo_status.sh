@@ -3,6 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+DEFAULT_COMMIT_COUNT=20
 
 print_version() {
   local version
@@ -17,7 +18,7 @@ print_version() {
 usage() {
   cat <<EOF
 SYNOPSIS
-    $0 [--help|-h] [--version|-v]
+    $0 [--help|-h] [--version|-v] [--commits|-n <count>]
 DESCRIPTION
     Report branch, worktree, ref, graph, and pull request status for the
     current repository.
@@ -25,6 +26,8 @@ DESCRIPTION
 OPTIONS
     -h, --help                    Print this help.
     -v, --version                 Print the tool version.
+    -n, --commits <count>         Show <count> commits in the recent git graph
+                                  (default: ${DEFAULT_COMMIT_COUNT}).
 ===============================================================
 PARAMETERS
     none                          This command does not accept positional
@@ -32,6 +35,8 @@ PARAMETERS
 ===============================================================
 EXAMPLES
     $0
+    $0 --commits 5
+    $0 -n 50
 ===============================================================
 DEPENDENCIES
     git, gh (optional for GitHub PR status details)
@@ -44,7 +49,7 @@ EOF
 }
 
 short_help() {
-  printf '%s\n' "Summarize repo/worktree/PR status; example: $0; dependencies: git and optional gh."
+  printf '%s\n' "Repo/worktree/PR summary; commits: -n/--commits N; ex: $0 -n 5; deps: git, gh optional."
 }
 
 heading() {
@@ -225,7 +230,8 @@ print_refs_for_head() {
 }
 
 print_graph() {
-  repo_cmd log --graph --decorate --oneline --all -n 20
+  local commit_count="$1"
+  repo_cmd log --graph --decorate --oneline --all -n "${commit_count}"
 }
 
 print_explanation() {
@@ -259,6 +265,8 @@ print_explanation() {
 }
 
 main() {
+  local commit_count="${DEFAULT_COMMIT_COUNT}"
+
   if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
     usage
     return 0
@@ -274,11 +282,49 @@ main() {
     return 0
   fi
 
-  if [ "$#" -gt 0 ]; then
-    printf 'This command does not accept positional arguments.\n' >&2
-    usage >&2
-    return 1
-  fi
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      -n|--commits)
+        if [ "$#" -lt 2 ]; then
+          printf 'Missing value for %s.\n' "$1" >&2
+          usage >&2
+          return 1
+        fi
+        case "$2" in
+          ''|*[!0-9]*)
+            printf 'Invalid commit count: %s\n' "$2" >&2
+            usage >&2
+            return 1
+            ;;
+        esac
+        if [ "$2" -lt 1 ]; then
+          printf 'Invalid commit count: %s\n' "$2" >&2
+          usage >&2
+          return 1
+        fi
+        commit_count="$2"
+        shift 2
+        ;;
+      --)
+        shift
+        if [ "$#" -gt 0 ]; then
+          printf 'This command does not accept positional arguments.\n' >&2
+          usage >&2
+          return 1
+        fi
+        ;;
+      -*)
+        printf 'Unexpected option: %s\n' "$1" >&2
+        usage >&2
+        return 1
+        ;;
+      *)
+        printf 'This command does not accept positional arguments.\n' >&2
+        usage >&2
+        return 1
+        ;;
+    esac
+  done
 
   printf 'Repository status for %s\n' "${PROJECT_ROOT}"
   printf 'Generated: %s\n' "$(date -Iseconds)"
@@ -301,7 +347,7 @@ main() {
   print_refs_for_head
 
   heading "Recent git graph"
-  print_graph
+  print_graph "${commit_count}"
 
   heading "Project status explanation"
   print_explanation
