@@ -1,6 +1,8 @@
 ---
 name: sc-gh-issue
 description: create or update GitHub issues in the current repository using gh. use when the user invokes /sc-gh-issue, or when another skill delegates GitHub issue publication. resolve a mandatory milestone, check for duplicate issue topics, create only when no same-topic issue exists, otherwise add a concise comment to the existing issue.
+metadata:
+  version: "0.0.0"
 ---
 
 # sc-gh-issue

@@ -19,6 +19,7 @@ Create artifacts from `docs/sc-config.yaml`.
 6. Gather only missing required fields.
 7. Generate the requested artifact.
 8. Write files by default once required fields are available.
+9. Never create on default main branch. First create a new branch for the new feature and create a PR on finish.
 
 ## Config Rules
 
