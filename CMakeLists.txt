@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(checkpp VERSION 0.1.1 LANGUAGES C CXX)
+project(checkpp VERSION 0.1.2 LANGUAGES C CXX)
 
 option(CHECKPP_STRIP_SYMBOLS "Strip symbols from executable" OFF)
 option(CHECKPP_LTO "Enable Link-Time Optimization" OFF)
@@ -50,7 +50,6 @@ include_directories(SYSTEM ${LLVM_INCLUDE_DIRS} ${CLANG_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})
 
 add_subdirectory(clang-tidy-module)
-add_subdirectory(tools/programs)
 
 add_executable(checkpp
     src/main.cpp
@@ -59,7 +58,7 @@ add_executable(checkpp
     src/runner.cpp
 )
 
-target_include_directories(checkpp PRIVATE include ${CMAKE_CURRENT_BINARY_DIR})
+target_include_directories(checkpp PRIVATE src/inc ${CMAKE_CURRENT_BINARY_DIR})
 target_compile_definitions(checkpp PRIVATE CHECKPP_VERSION="${PROJECT_VERSION}")
 
 if(CHECKPP_EMBED_CLANG_TIDY_MODULE)

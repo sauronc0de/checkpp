@@ -27,7 +27,7 @@ When updating docs:
 
 ## Project layout highlights
 
-- `src/` and `include/` contain the main CLI application
+- `src/` contains the main CLI application sources and headers
 - `clang-tidy-module/` contains the custom checks
 - `config/` contains bundled example rule profiles
 - `docs/` contains user, developer, and reference documentation
