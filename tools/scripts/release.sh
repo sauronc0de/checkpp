@@ -66,8 +66,9 @@ release_default_branch() {
 
 release_previous_release_ref() {
   local tag="$1"
+  : "$tag"
 
-  git describe --tags --abbrev=0 --match 'v[0-9]*' "${tag}^" 2>/dev/null \
+  git describe --tags --abbrev=0 --match 'v[0-9]*' HEAD 2>/dev/null \
     || git rev-list --max-parents=0 HEAD
 }
 
@@ -299,8 +300,8 @@ release_package_assets() {
   release_assets+=("$artifact_dir/${RELEASE_PACKAGE_BINARY_ASSET_NAME}")
 
   if [ -n "${RELEASE_RULES_PATH:-}" ] && [ -f "$RELEASE_RULES_PATH" ]; then
-    release_copy_asset "$RELEASE_RULES_PATH" "$artifact_dir/${RELEASE_RULES_ASSET_NAME}-${tag}.yaml"
-    release_assets+=("$artifact_dir/${RELEASE_RULES_ASSET_NAME}-${tag}.yaml")
+    release_copy_asset "$RELEASE_RULES_PATH" "$artifact_dir/${RELEASE_RULES_ASSET_NAME}.yaml"
+    release_assets+=("$artifact_dir/${RELEASE_RULES_ASSET_NAME}.yaml")
   fi
 
   if [ -n "${RELEASE_IGNORE_PATHS_PATH:-}" ] && [ -f "$RELEASE_IGNORE_PATHS_PATH" ]; then
