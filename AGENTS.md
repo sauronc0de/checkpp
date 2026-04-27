@@ -14,6 +14,7 @@ When working on this project, load the relevant skill(s) BEFORE writing any code
 | Skill | Trigger | Path |
 |-------|---------|------|
 | sc-create | User invokes `/sc-create` or `@sc-create` to create artifacts from `docs/sc-config.yaml`; writes artifacts by default without waiting for approval or requiring `--write`. | `file:///workspaces/checkpp/.opencode/skills/sc-create/SKILL.md` |
+| sc-gh-issue | User invokes `/sc-gh-issue` or another skill delegates GitHub issue publication; creates an issue or comments on an existing same-topic issue using `gh`. | `file:///workspaces/checkpp/.opencode/skills/sc-gh-issue/SKILL.md` |
 | sc-review | User requests `/sc-review <process>` commands, optionally with `--publish github`, `--publish local`, or `--ignore-milestone`. | `file:///workspaces/checkpp/.opencode/skills/sc-review/SKILL.md` |
 | sdd-apply | Implement tasks from a change/spec during the apply phase. | `file:///home/dockuser/.config/opencode/skills/sdd-apply/SKILL.md` |
 | sdd-archive | Archive a completed change after implementation and verification. | `file:///home/dockuser/.config/opencode/skills/sdd-archive/SKILL.md` |
