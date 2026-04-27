@@ -9,6 +9,60 @@ VERSION="0.4.0"
 ROOTS=()
 RECURSIVE=0
 VERBOSE=0
+COLOR_MODE=auto
+USE_COLOR=0
+
+set_color() {
+    if [ "$COLOR_MODE" = "always" ] || { [ "$COLOR_MODE" = "auto" ] && [ -t 1 ]; }; then
+        USE_COLOR=1
+        C_RESET='\033[0m'
+        C_LABEL='\033[1;36m'
+        C_SEPARATOR='\033[90m'
+        C_TOOL='\033[1;32m'
+        C_INFO='\033[1;34m'
+        C_ERROR='\033[1;31m'
+    else
+        USE_COLOR=0
+        C_RESET=''
+        C_LABEL=''
+        C_SEPARATOR=''
+        C_TOOL=''
+        C_INFO=''
+        C_ERROR=''
+    fi
+}
+
+color_text() {
+    color="$1"
+    text="$2"
+
+    if [ "$USE_COLOR" -eq 1 ]; then
+        printf '%b%s%b' "$color" "$text" "$C_RESET"
+    else
+        printf '%s' "$text"
+    fi
+}
+
+print_padded() {
+    color="$1"
+    text="$2"
+    width="$3"
+    padding=$((width - ${#text}))
+
+    color_text "$color" "$text"
+    while [ "$padding" -gt 0 ]; do
+        printf ' '
+        padding=$((padding - 1))
+    done
+}
+
+print_tool_row() {
+    name="$1"
+    description="$2"
+
+    print_padded "$C_TOOL" "$name" 25
+    printf ' | %s\n' "$description"
+}
 
 usage() {
     cat <<EOF
@@ -24,6 +78,8 @@ usage() {
 
  OPTIONS
     --root DIR          Scan this directory instead of defaults
+    --color             Force color output
+    --no-color          Disable color output
     -r, --recursive     Scan recursively
     --verbose           Print diagnostics to stderr
     -h, --help          Print this help
@@ -42,12 +98,14 @@ EOF
 }
 
 log() {
-    [ "$VERBOSE" -eq 1 ] && printf '[INFO] %s\n' "$*" >&2
+    [ "$VERBOSE" -eq 1 ] && printf '%s %s\n' "$(color_text "$C_INFO" '[INFO]')" "$*" >&2
 }
 
 err() {
-    printf '[ERROR] %s\n' "$*" >&2
+    printf '%s %s\n' "$(color_text "$C_ERROR" '[ERROR]')" "$*" >&2
 }
+
+set_color
 
 while [ "$#" -gt 0 ]; do
     case "$1" in
@@ -58,6 +116,14 @@ while [ "$#" -gt 0 ]; do
             ;;
         --root=*)
             ROOTS+=("${1#*=}")
+            ;;
+        --color)
+            COLOR_MODE=always
+            set_color
+            ;;
+        --no-color)
+            COLOR_MODE=never
+            set_color
             ;;
         -r|--recursive)
             RECURSIVE=1
@@ -85,6 +151,8 @@ while [ "$#" -gt 0 ]; do
     shift
 done
 
+set_color
+
 if [ "${#ROOTS[@]}" -eq 0 ]; then
     ROOTS=("$SCRIPT_DIR" "$SCRIPT_DIR/..")
 fi
@@ -106,7 +174,7 @@ run_tool() {
     output="$("$tool" --short-help 2>/dev/null)"
     if [ $? -eq 0 ] && [ -n "$output" ]; then
         output="$(printf '%s\n' "$output" | head -n 1 | sed 's/[[:space:]]\+/ /g')"
-        printf '%-25s | %s\n' "$name" "$output"
+        print_tool_row "$name" "$output"
         return 0
     fi
 
@@ -114,12 +182,12 @@ run_tool() {
     output="$("$tool" --help 2>/dev/null | head -n 1)"
     if [ -n "$output" ]; then
         output="$(printf '%s\n' "$output" | sed 's/[[:space:]]\+/ /g')"
-        printf '%-25s | %s\n' "$name" "$output"
+        print_tool_row "$name" "$output"
         return 0
     fi
 
     # 3. Final fallback → just list it
-    printf '%-25s | (no help available)\n' "$name"
+    print_tool_row "$name" "(no help available)"
 }
 
 tmp_file="$(mktemp)"
@@ -145,8 +213,11 @@ if [ ! -s "$tmp_file" ]; then
     exit 1
 fi
 
-printf '%-25s | %s\n' "TOOL" "DESCRIPTION"
-printf '%-25s-+-%s\n' "-------------------------" "---------------------------------------------"
+printf '\n'
+print_padded "$C_LABEL" "TOOL" 25
+printf ' %s %s\n' "$(color_text "$C_SEPARATOR" '|')" "$(color_text "$C_LABEL" 'DESCRIPTION')"
+color_text "$C_SEPARATOR" '--------------------------+----------------------------------------------'
+printf '\n'
 
 sort -u "$tmp_file" | while IFS= read -r tool; do
     run_tool "$tool"
