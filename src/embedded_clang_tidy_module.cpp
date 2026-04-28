@@ -10,6 +10,25 @@
 
 namespace fs = std::filesystem;
 
+namespace
+{
+#ifndef CHECKPP_EMBED_CLANG_TIDY_MODULE
+auto executableDirectory() -> fs::path
+{
+  std::array<char, 4096> kExecutablePath{};
+  const auto kPathSize = ::readlink(
+      "/proc/self/exe", kExecutablePath.data(), kExecutablePath.size() - 1);
+  if(kPathSize <= 0)
+  {
+    return fs::current_path();
+  }
+
+  kExecutablePath[static_cast<std::size_t>(kPathSize)] = '\0';
+  return fs::path{kExecutablePath.data()}.parent_path();
+}
+#endif
+} // namespace
+
 #ifdef CHECKPP_EMBED_CLANG_TIDY_MODULE
 #include "embedded_clang_tidy_module_data.inc"
 
@@ -61,6 +80,7 @@ auto defaultPluginPath() -> fs::path
 #ifdef CHECKPP_EMBED_CLANG_TIDY_MODULE
   return writeEmbeddedModuleToTempFile();
 #else
-  return fs::path{"./build/clang-tidy-module/libCompanyClangTidyModule.so"};
+  return executableDirectory() /
+         "clang-tidy-module/libCompanyClangTidyModule.so";
 #endif
 }

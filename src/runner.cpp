@@ -667,6 +667,10 @@ auto Runner::printFindings(const std::vector<Finding> &findings,
                            const std::vector<fs::path> &checkedFiles,
                            const RunnerOutputOptions &outputOptions) -> void
 {
+  const auto kComparablePath = [](const fs::path &path) {
+    return fs::absolute(path).lexically_normal().generic_string();
+  };
+
   int errors = 0;
   int warnings = 0;
   int infos = 0;
@@ -674,8 +678,7 @@ auto Runner::printFindings(const std::vector<Finding> &findings,
   std::unordered_map<std::string, std::vector<const Finding *>> findingsByFile;
   for(const auto &finding : findings)
   {
-    findingsByFile[finding.path_.lexically_normal().generic_string()].push_back(
-        &finding);
+    findingsByFile[kComparablePath(finding.path_)].push_back(&finding);
   }
 
   for(const auto &finding : findings)
@@ -727,7 +730,7 @@ auto Runner::printFindings(const std::vector<Finding> &findings,
   std::vector<std::string> filesWithoutFindings;
   for(const auto &file : checkedFiles)
   {
-    const std::string kFile = file.lexically_normal().generic_string();
+    const std::string kFile = kComparablePath(file);
     if(findingsByFile.contains(kFile))
     {
       filesWithFindings.push_back(kFile);
