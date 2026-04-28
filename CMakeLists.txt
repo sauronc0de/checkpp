@@ -9,6 +9,7 @@ option(CHECKPP_WARNINGS_AS_ERRORS "Treat warnings as errors" OFF)
 option(CHECKPP_ENABLE_COVERAGE "Enable code coverage" OFF)
 option(CHECKPP_ENABLE_STATIC_ANALYSIS "Enable static analysis tools" OFF)
 option(CHECKPP_ENABLE_FUZZ "Enable fuzzing instrumentation" OFF)
+option(CHECKPP_BUILD_DEB "Enable .deb package generation with CPack" OFF)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -110,4 +111,36 @@ if(CHECKPP_STRIP_SYMBOLS)
     )
 endif()
 
-install(TARGETS checkpp)
+include(GNUInstallDirs)
+
+install(TARGETS checkpp
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+if(CHECKPP_BUILD_DEB)
+    message(STATUS "🧱 Creating .deb packages with CPack is enabled.")
+    set(CPACK_GENERATOR "DEB")
+
+    set(CPACK_PACKAGE_NAME "checkpp")
+    set(CPACK_PROJECT_NAME ${PROJECT_NAME})
+    set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
+    set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "checkpp static analysis runner")
+    set(CPACK_PACKAGE_VENDOR "sverdaguer")
+    set(CPACK_PACKAGE_CONTACT "-")
+    set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+    set(CPACK_DEBIAN_PACKAGE_MAINTAINER "sverdaguer")
+    set(CPACK_DEBIAN_PACKAGE_SECTION "devel")
+    set(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
+
+    # Produces Debian-style names like:
+    # checkpp_0.1.2_amd64.deb
+    set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
+
+    # Auto-detect shared library dependencies.
+    # Requires dpkg-shlibdeps, usually from dpkg-dev.
+    set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+
+    include(CPack)
+
+
+endif()
