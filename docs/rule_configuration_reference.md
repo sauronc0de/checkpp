@@ -212,6 +212,9 @@ These are the custom checks registered by the application today.
 | `company-constant-k-prefix` | Const / `constexpr` variables must use `kPascalCase` | `rule_id`, `enabled`, `severity` |
 | `company-global-g-prefix` | Non-const file-scope globals must start with `g_` | `rule_id`, `enabled`, `severity` |
 | `company-global-variable-module-prefix` | Non-static translation-unit globals must use `moduleName_variableName` | `rule_id`, `enabled`, `severity` |
+| `company-comment-style` | Forbids `//` trailing comments beside code and flags commented-out code heuristically | `rule_id`, `enabled`, `severity` |
+| `company-exact-width-integer-types` | Flags raw integer spellings such as `int`, `short`, and `long` to encourage exact-width types | `rule_id`, `enabled`, `severity` |
+| `company-library-module-structure` | Validates `/module/inc` + `/module/src` library layout, filename prefixes, and required base header/source pair | `rule_id`, `enabled`, `severity` |
 | `company-local-variable-snake-case` | Non-global local variables must use `snake_case` | `rule_id`, `enabled`, `severity` |
 | `company-member-trailing-underscore` | Data members must be `camelCase_` | `rule_id`, `enabled`, `severity` |
 | `company-namespace-snake-case` | Named namespaces must use `snake_case` | `rule_id`, `enabled`, `severity` |
@@ -245,13 +248,57 @@ checks:
 
 ### Module-prefix rules
 
-`company-global-function-module-prefix` and `company-global-variable-module-prefix` both require this shape:
+`company-global-function-module-prefix` requires this shape:
 
 ```text
 moduleName_symbolName
 ```
 
-This is currently a fixed regex-style convention; the separator and naming pattern are not configurable.
+`company-global-variable-module-prefix` now uses the active module directory when files follow the library layout below:
+
+```text
+/module_name
+  /inc/module_name.h
+  /src/module_name.c
+```
+
+For module files, globals must use:
+
+```text
+module_name_symbolName
+```
+
+Outside that layout, the older generic `moduleName_symbolName` convention is still accepted.
+
+### `company-comment-style`
+
+- Allows standalone `//` comments and `/* ... */` block comments.
+- Flags `//` comments that appear to the right of code on the same line.
+- Flags comments that look like commented-out code using a conservative text heuristic.
+
+### `company-exact-width-integer-types`
+
+- Scans raw source text outside comments/strings.
+- Flags built-in integer spellings such as `int`, `short`, `long`, `unsigned int`, and `long long`.
+- Encourages replacing them with `<stdint.h>` / `<cstdint>` exact-width types like `int32_t` or `uint8_t`.
+
+### `company-library-module-structure`
+
+- Recognizes library units shaped like:
+
+```text
+/module_name
+  /inc
+    module_name.h
+    module_name_other.h
+  /src
+    module_name.c
+    module_name_other.c
+```
+
+- Requires additional files to keep the `module_name` prefix.
+- Requires at least one base header (`module_name.h`) and one base implementation (`module_name.c/.cc/.cpp/.cxx`) per discovered module.
+- Ignores `main.*` when enforcing this structure rule.
 
 ### `company-include-order`
 

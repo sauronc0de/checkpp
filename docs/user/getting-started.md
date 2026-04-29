@@ -45,6 +45,11 @@ Useful starting points:
 - [`config/rules_c_family.yaml`](../../config/rules_c_family.yaml)
 - [`config/rules_c_family_cpp.yaml`](../../config/rules_c_family_cpp.yaml)
 
+Small demonstration projects are available under [`sw_example/fixtures`](../../sw_example/fixtures):
+
+- `company_rules_fail` intentionally triggers many company and common C/C++ findings.
+- `company_rules_pass` keeps the same style of code with the findings resolved.
+
 For the full YAML schema and rule inventory, see the [rule configuration reference](../rule_configuration_reference.md).
 
 ### Compilation database

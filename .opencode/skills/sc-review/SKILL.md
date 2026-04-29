@@ -274,7 +274,7 @@ defaults:
 processes:
   tools:
     guidelines:
-      - docs/tools_guidelines.md
+      - docs/guidelines/tools_guidelines.md
     actions:
       review:
         inputs:

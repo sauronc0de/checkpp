@@ -23,7 +23,6 @@ cmake --build --preset release -j
 
 - [Developer build guide](docs/developer/build.md)
 - [Contributing guide](docs/developer/contributing.md)
-- [Tool guidelines](docs/tools_guidelines.md)
 
 ## What `checkpp` does
 
@@ -38,6 +37,13 @@ cmake --build --preset release -j
 - [`config/rules_c_family.yaml`](config/rules_c_family.yaml) — shared C/C++ profile
 - [`config/rules_c_family_cpp.yaml`](config/rules_c_family_cpp.yaml) — shared C/C++ profile with extra C++ rules
 - [`config/ignore_paths.txt`](config/ignore_paths.txt) — example ignore list for `--ignore-paths`
+
+## Sample projects
+
+- [`sw_example/fixtures/company_rules_fail`](sw_example/fixtures/company_rules_fail) — compact failing showcase for company and common C/C++ rules
+- [`sw_example/fixtures/company_rules_pass`](sw_example/fixtures/company_rules_pass) — matching cleaned-up counterpart for comparison
+
+See [`sw_example/fixtures/README.md`](sw_example/fixtures/README.md) for build and run commands.
 
 ## Example output
 
