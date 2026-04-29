@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-RELEASE_CONFIG="${RELEASE_CONFIG:-${PROJECT_ROOT}/.config/release.config.sh}"
+RELEASE_CONFIG="${RELEASE_CONFIG:-${PROJECT_ROOT}/tools/scripts/project_specific/release.config.sh}"
 
 release_die() {
   printf '\033[31mRelease failed: %s\033[0m\n' "$1" >&2

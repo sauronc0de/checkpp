@@ -7,7 +7,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 VERSION="0.4.0"
 
 ROOTS=()
-RECURSIVE=0
+RECURSIVE=1
 VERBOSE=0
 COLOR_MODE=auto
 USE_COLOR=0
@@ -67,27 +67,27 @@ print_tool_row() {
 usage() {
     cat <<EOF
  SYNOPSIS
-    ${SCRIPT_NAME} [-hrv] [--root DIR]
+    ${SCRIPT_NAME} [-hv] [--root DIR] [--no-recursive]
 
  DESCRIPTION
     Lists --short-help from executable scripts and binaries.
 
-    Default scan paths:
-      ${SCRIPT_DIR}
-      ${SCRIPT_DIR}/..
+    Default scan path:
+      ${SCRIPT_DIR}/../../
 
  OPTIONS
     --root DIR          Scan this directory instead of defaults
     --color             Force color output
     --no-color          Disable color output
-    -r, --recursive     Scan recursively
+    -r, --recursive     Scan recursively (default)
+    --no-recursive      Disable recursive scanning
     --verbose           Print diagnostics to stderr
     -h, --help          Print this help
     -v, --version       Print version
 
  EXAMPLES
     ${SCRIPT_NAME}
-    ${SCRIPT_NAME} -r
+    ${SCRIPT_NAME} --no-recursive
     ${SCRIPT_NAME} --root ./tools/scripts
 
  IMPLEMENTATION
@@ -128,6 +128,9 @@ while [ "$#" -gt 0 ]; do
         -r|--recursive)
             RECURSIVE=1
             ;;
+        --no-recursive)
+            RECURSIVE=0
+            ;;
         --verbose)
             VERBOSE=1
             ;;
@@ -140,7 +143,7 @@ while [ "$#" -gt 0 ]; do
             exit 0
             ;;
         --short-help)
-            printf 'List executable tools; example: %s -r --root ./tools/scripts.\n' "$SCRIPT_NAME"
+            printf 'List executable tools recursively by default; example: %s --no-recursive --root ./tools/scripts.\n' "$SCRIPT_NAME"
             exit 0
             ;;
         *)
@@ -154,13 +157,14 @@ done
 set_color
 
 if [ "${#ROOTS[@]}" -eq 0 ]; then
-    ROOTS=("$SCRIPT_DIR" "$SCRIPT_DIR/..")
+    ROOTS=("$SCRIPT_DIR/../../")
 fi
 
 self_path="$(readlink -f "$0" 2>/dev/null || printf '%s\n' "$0")"
 
 run_tool() {
     tool="$1"
+    display_name="$2"
 
     tool_path="$(readlink -f "$tool" 2>/dev/null || printf '%s\n' "$tool")"
 
@@ -168,13 +172,11 @@ run_tool() {
     [ -x "$tool" ] || return 0
     [ -f "$tool" ] || return 0
 
-    name="$(basename "$tool")"
-
     # 1. Try --short-help
     output="$("$tool" --short-help 2>/dev/null)"
     if [ $? -eq 0 ] && [ -n "$output" ]; then
         output="$(printf '%s\n' "$output" | head -n 1 | sed 's/[[:space:]]\+/ /g')"
-        print_tool_row "$name" "$output"
+        print_tool_row "$display_name" "$output"
         return 0
     fi
 
@@ -182,16 +184,20 @@ run_tool() {
     output="$("$tool" --help 2>/dev/null | head -n 1)"
     if [ -n "$output" ]; then
         output="$(printf '%s\n' "$output" | sed 's/[[:space:]]\+/ /g')"
-        print_tool_row "$name" "$output"
+        print_tool_row "$display_name" "$output"
         return 0
     fi
 
     # 3. Final fallback → just list it
-    print_tool_row "$name" "(no help available)"
+    print_tool_row "$display_name" "(no help available)"
 }
 
-tmp_file="$(mktemp)"
-trap 'rm -f "$tmp_file"' EXIT
+tmp_scan="$(mktemp)"
+tmp_unique="$(mktemp)"
+trap 'rm -f "$tmp_scan" "$tmp_unique"' EXIT
+
+declare -A SEEN_ABS
+declare -A BASENAME_COUNT
 
 for root in "${ROOTS[@]}"; do
     if [ ! -d "$root" ]; then
@@ -202,16 +208,35 @@ for root in "${ROOTS[@]}"; do
     log "Scanning: $root"
 
     if [ "$RECURSIVE" -eq 1 ]; then
-        find "$root" -type f -executable >> "$tmp_file"
+        while IFS= read -r tool; do
+            tool_path="$(readlink -f "$tool" 2>/dev/null || printf '%s\n' "$tool")"
+            [ "$tool_path" = "$self_path" ] && continue
+            [ -n "${SEEN_ABS[$tool_path]+x}" ] && continue
+            SEEN_ABS["$tool_path"]=1
+            printf '%s\t%s\n' "$tool_path" "$root" >> "$tmp_unique"
+            printf '%s\n' "$tool_path" >> "$tmp_scan"
+        done < <(find "$root" -type f -executable)
     else
-        find "$root" -maxdepth 1 -type f -executable >> "$tmp_file"
+        while IFS= read -r tool; do
+            tool_path="$(readlink -f "$tool" 2>/dev/null || printf '%s\n' "$tool")"
+            [ "$tool_path" = "$self_path" ] && continue
+            [ -n "${SEEN_ABS[$tool_path]+x}" ] && continue
+            SEEN_ABS["$tool_path"]=1
+            printf '%s\t%s\n' "$tool_path" "$root" >> "$tmp_unique"
+            printf '%s\n' "$tool_path" >> "$tmp_scan"
+        done < <(find "$root" -maxdepth 1 -type f -executable)
     fi
 done
 
-if [ ! -s "$tmp_file" ]; then
+if [ ! -s "$tmp_scan" ]; then
     err "No executable files found."
     exit 1
 fi
+
+while IFS=$'\t' read -r tool_path scan_root; do
+    base_name="$(basename "$tool_path")"
+    BASENAME_COUNT["$base_name"]=$(( ${BASENAME_COUNT["$base_name"]:-0} + 1 ))
+done < "$tmp_unique"
 
 printf '\n'
 print_padded "$C_LABEL" "TOOL" 25
@@ -219,8 +244,22 @@ printf ' %s %s\n' "$(color_text "$C_SEPARATOR" '|')" "$(color_text "$C_LABEL" 'D
 color_text "$C_SEPARATOR" '--------------------------+----------------------------------------------'
 printf '\n'
 
-sort -u "$tmp_file" | while IFS= read -r tool; do
-    run_tool "$tool"
-done
+while IFS=$'\t' read -r tool_path scan_root; do
+    base_name="$(basename "$tool_path")"
+    display_name="$base_name"
+
+    if [ "${BASENAME_COUNT[$base_name]}" -gt 1 ]; then
+        case "$tool_path" in
+            "$scan_root"/*)
+                display_name="${tool_path#"$scan_root"/}"
+                ;;
+            *)
+                display_name="$tool_path"
+                ;;
+        esac
+    fi
+
+    run_tool "$tool_path" "$display_name"
+done < "$tmp_unique"
 
 printf '\n'
