@@ -13,10 +13,10 @@ echo "🔐 Applying permissions to: $WORKSPACE_DIR"
 sudo chown --no-dereference -R "$(whoami)" "$WORKSPACE_DIR"
 
 # Make scripts executable
-chmod -R a+x "$WORKSPACE_DIR/scripts"
+chmod -R a+x "$WORKSPACE_DIR/scripts" "$WORKSPACE_DIR/tools/scripts"
 
 # Make commands visible from anywhere
-export PATH="$PATH:$WORKSPACE_DIR/scripts"
+export PATH="$PATH:$WORKSPACE_DIR/scripts:$WORKSPACE_DIR/tools/scripts"
 
 echo "📁 Linking opencode folder to user home directory"
 
