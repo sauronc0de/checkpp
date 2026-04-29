@@ -22,6 +22,7 @@ public:
                     const std::filesystem::path &ignorePathsPath = {},
                     std::string *errorMessage = nullptr) -> bool;
   auto getRule(const std::string &checkName) const -> RuleSetting;
+  auto hasRule(const std::string &checkName) const -> bool;
   auto clangTidyChecks() const -> const std::vector<std::string> &;
   auto enabledChecks() const -> std::vector<std::string>;
   auto ignoredPathFilters() const -> const std::vector<std::string> &;

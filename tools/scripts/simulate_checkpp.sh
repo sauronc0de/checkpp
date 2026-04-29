@@ -45,8 +45,7 @@ OPTIONS
                                  (default: ${checkpp_bin}).
     --rules FILE                 checkpp rules file
                                  (default: ${rules_file}).
-    --ignore_paths FILE          checkpp ignore-paths file
-                                 (default: derived from SOURCE_DIR).
+    --ignore_paths FILE          checkpp ignore-paths file (optional).
     --verbose                    Print progress logs to stderr.
     -h, --help                   Print this help.
     -v, --version                Print the tool version.
@@ -158,10 +157,6 @@ if [ "${build_dir_provided}" = "NO" ]; then
   build_dir="${source_dir}/build"
 fi
 
-if [ "${ignore_paths_provided}" = "NO" ]; then
-  ignore_paths="${source_dir}/ignore_paths.txt"
-fi
-
 if [ ! -d "${source_dir}" ]; then
   printf 'Source directory does not exist: %s\n' "${source_dir}" >&2
   exit 1
@@ -177,7 +172,7 @@ if [ ! -f "${rules_file}" ]; then
   exit 1
 fi
 
-if [ ! -f "${ignore_paths}" ]; then
+if [ "${ignore_paths_provided}" = "YES" ] && [ ! -f "${ignore_paths}" ]; then
   printf 'Ignore-paths file does not exist: %s\n' "${ignore_paths}" >&2
   exit 1
 fi
@@ -214,7 +209,11 @@ app_status=0
 
 log "Running checkpp"
 checkpp_status=0
-"${checkpp_bin}" "${source_dir}" "${build_dir}" "${rules_file}" --ignore-paths "${ignore_paths}" || checkpp_status=$?
+checkpp_cmd=("${checkpp_bin}" "${source_dir}" "${build_dir}" "${rules_file}")
+if [ "${ignore_paths_provided}" = "YES" ]; then
+  checkpp_cmd+=(--ignore-paths "${ignore_paths}")
+fi
+"${checkpp_cmd[@]}" || checkpp_status=$?
 
 if [ "${checkpp_status}" -ne 0 ]; then
   exit "${checkpp_status}"

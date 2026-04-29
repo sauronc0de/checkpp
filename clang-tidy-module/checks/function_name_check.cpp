@@ -48,6 +48,24 @@ auto FunctionNameCheck::check(
       return;
     }
 
+    if(result.SourceManager != nullptr)
+    {
+      const clang::SourceLocation kExpansionLoc =
+          result.SourceManager->getExpansionLoc(decl->getLocation());
+      const auto kExpectedModuleName =
+          moduleNameFromPath(result.SourceManager->getFilename(kExpansionLoc).str());
+      if(kExpectedModuleName.has_value())
+      {
+        if(!hasExpectedModulePrefix(kName, *kExpectedModuleName))
+        {
+          diag(decl->getLocation(),
+               "global function '%0' should use moduleName_functionName")
+              << kName;
+        }
+        return;
+      }
+    }
+
     if(!isModulePrefixedCamelCase(kName))
     {
       diag(decl->getLocation(),

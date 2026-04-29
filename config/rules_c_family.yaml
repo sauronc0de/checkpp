@@ -2,11 +2,32 @@ clang_tidy_checks:
   - -*
   - clang-analyzer-*
   - bugprone-*
+  - clang-diagnostic-implicit-fallthrough
   - readability-braces-around-statements
   - readability-misleading-indentation
   - readability-redundant-preprocessor
 
 checks:
+  clang-diagnostic-implicit-fallthrough:
+    rule_id: "LAY-008"
+    enabled: true
+    severity: warning
+
+  company-comment-style:
+    rule_id: "COM-001"
+    enabled: true
+    severity: warning
+
+  company-exact-width-integer-types:
+    rule_id: "TYPE-001"
+    enabled: true
+    severity: warning
+
+  company-library-module-structure:
+    rule_id: "LAY-009"
+    enabled: true
+    severity: warning
+
   company-file-snake-case:
     rule_id: "C-5.1"
     enabled: true
@@ -38,12 +59,12 @@ checks:
     severity: warning
 
   company-no-tabs:
-    rule_id: "C-2.1"
+    rule_id: "GEN-001"
     enabled: true
     severity: error
 
   company-line-length:
-    rule_id: "C-2.2"
+    rule_id: "GEN-002"
     enabled: true
     severity: error
-    max_length: 80
+    max_length: 90

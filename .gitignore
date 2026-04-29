@@ -1,4 +1,5 @@
 build/
+sw_example/**/build/
 data/
 .cache/
 .engram/

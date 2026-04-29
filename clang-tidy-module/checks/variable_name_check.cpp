@@ -61,7 +61,9 @@ auto isGlobalVariable(const clang::VarDecl &decl) -> bool
 
 auto shouldDiagnose(VariableRuleKind ruleKind,
                     const clang::VarDecl &decl,
-                    const std::string &name) -> bool
+                    const std::string &name,
+                    const std::optional<std::string> &expectedModuleName)
+    -> bool
 {
   bool isConstant = isConstantVariable(decl);
   bool isGlobal = isGlobalVariable(decl);
@@ -77,10 +79,18 @@ auto shouldDiagnose(VariableRuleKind ruleKind,
   case VariableRuleKind::LocalSnakeCase:
     return !isGlobal && !isSnakeCase(name);
   case VariableRuleKind::ModuleGlobal:
-    return isGlobal && !isConstant &&
-           decl.getStorageClass() != clang::SC_Static &&
-           decl.getDeclContext()->getRedeclContext()->isTranslationUnit() &&
-           !isModulePrefixedCamelCase(name);
+    if(!(isGlobal && !isConstant && decl.getStorageClass() != clang::SC_Static &&
+         decl.getDeclContext()->getRedeclContext()->isTranslationUnit()))
+    {
+      return false;
+    }
+
+    if(expectedModuleName.has_value())
+    {
+      return !hasExpectedModulePrefix(name, *expectedModuleName);
+    }
+
+    return !isModulePrefixedCamelCase(name);
   case VariableRuleKind::DefaultCamelCase:
     return !isCamelCase(name);
   }
@@ -143,7 +153,16 @@ auto VariableNameCheck::check(
   }
 
   auto ruleKind = detectRuleKind(checkName_);
-  if(shouldDiagnose(ruleKind, *decl, kName))
+  std::optional<std::string> expectedModuleName;
+  if(result.SourceManager != nullptr)
+  {
+    const clang::SourceLocation kExpansionLoc =
+        result.SourceManager->getExpansionLoc(decl->getLocation());
+    expectedModuleName =
+        moduleNameFromPath(result.SourceManager->getFilename(kExpansionLoc).str());
+  }
+
+  if(shouldDiagnose(ruleKind, *decl, kName, expectedModuleName))
   {
     diag(decl->getLocation(), diagnosticMessage(ruleKind)) << kName;
   }

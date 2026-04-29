@@ -89,7 +89,7 @@ checks:
     rule_id: "15.1"
     enabled: true
     severity: error
-    max_length: 80
+    max_length: 90
 
   company-constructor-init-list:
     rule_id: "16.1"

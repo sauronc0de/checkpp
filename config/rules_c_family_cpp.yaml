@@ -2,6 +2,7 @@ clang_tidy_checks:
   - -*
   - clang-analyzer-*
   - bugprone-*
+  - clang-diagnostic-implicit-fallthrough
   - performance-*
   - modernize-*
   - readability-*
@@ -9,6 +10,26 @@ clang_tidy_checks:
   - -readability-magic-numbers
 
 checks:
+  clang-diagnostic-implicit-fallthrough:
+    rule_id: "LAY-008"
+    enabled: true
+    severity: warning
+
+  company-comment-style:
+    rule_id: "COM-001"
+    enabled: true
+    severity: warning
+
+  company-exact-width-integer-types:
+    rule_id: "TYPE-001"
+    enabled: true
+    severity: warning
+
+  company-library-module-structure:
+    rule_id: "LAY-009"
+    enabled: true
+    severity: warning
+
   company-file-snake-case:
     rule_id: "C-5.1"
     enabled: true

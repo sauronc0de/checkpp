@@ -58,7 +58,10 @@ private:
       -> std::vector<Finding>;
   [[nodiscard]] auto scanFiles(const std::vector<std::filesystem::path> &files,
                                const RunPaths &paths) const
-      -> std::pair<std::vector<Finding>, bool>;
+       -> std::pair<std::vector<Finding>, bool>;
+  [[nodiscard]] auto runRawChecks(
+      const std::vector<std::filesystem::path> &files,
+      const std::filesystem::path &projectRoot) const -> std::vector<Finding>;
   static auto printFindings(
       const std::vector<Finding> &findings,
       const std::vector<std::filesystem::path> &checkedFiles,

@@ -7,6 +7,7 @@
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <mutex>
@@ -174,6 +175,208 @@ auto isWithinDirectory(const fs::path &path, const fs::path &directory) -> bool
   }
 
   return true;
+}
+
+auto isSnakeCaseName(const std::string &name) -> bool
+{
+  static const std::regex kPattern(R"(^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$)");
+  return std::regex_match(name, kPattern);
+}
+
+auto configuredRule(const Config &config, const std::string &checkName)
+    -> std::optional<RuleSetting>
+{
+  if(!config.hasRule(checkName))
+  {
+    return std::nullopt;
+  }
+
+  const RuleSetting kRule = config.getRule(checkName);
+  if(!kRule.enabled_ || kRule.severity_ == Severity::Hidden)
+  {
+    return std::nullopt;
+  }
+
+  return kRule;
+}
+
+auto makeFinding(const RuleSetting &rule, const std::string &checkName,
+                 const fs::path &path, int line, int column,
+                 std::string message) -> Finding
+{
+  Finding finding;
+  finding.severity_ = rule.severity_;
+  finding.ruleId_ = rule.ruleId_;
+  finding.checkName_ = checkName;
+  finding.path_ = path;
+  finding.line_ = line;
+  finding.column_ = column;
+  finding.message_ = std::move(message);
+  return finding;
+}
+
+auto readFileContents(const fs::path &path) -> std::optional<std::string>
+{
+  std::ifstream input(path);
+  if(!input.is_open())
+  {
+    return std::nullopt;
+  }
+
+  return std::string(std::istreambuf_iterator<char>(input),
+                     std::istreambuf_iterator<char>());
+}
+
+auto lineHasCode(const std::string &line) -> bool
+{
+  return std::ranges::any_of(line, [](unsigned char character) {
+    return std::isspace(character) == 0;
+  });
+}
+
+auto looksLikeCommentedOutCode(const std::string &text) -> bool
+{
+  static const std::array<std::regex, 8> kPatterns = {
+      std::regex(R"([;{}])"),
+      std::regex(R"(^\s*#\s*(include|define)\b)"),
+      std::regex(R"(^\s*(if|for|while|switch)\s*\()"),
+      std::regex(R"(^\s*(return|break|continue)\b)"),
+      std::regex(R"(^\s*(const\s+)?(unsigned|signed|short|int|long|char|float|double|void)\b)"),
+      std::regex(R"(^\s*(struct|enum|union|typedef)\b)"),
+      std::regex(R"(^\s*[A-Za-z_]\w*\s*=([^=].*)?$)"),
+      std::regex(R"(^\s*[A-Za-z_]\w*(?:\s+[*&]?\s*[A-Za-z_]\w*)?\s*\([^)]*\)\s*;?\s*$)")};
+
+  return std::ranges::any_of(kPatterns, [&text](const std::regex &pattern) {
+    return std::regex_search(text, pattern);
+  });
+}
+
+auto appendExactWidthFindings(const RuleSetting &rule, const fs::path &file,
+                              const std::string &lineText, int lineNumber,
+                              std::vector<Finding> &findings) -> void
+{
+  static const std::regex kPattern(
+      R"(\b(?:unsigned\s+long\s+long|signed\s+long\s+long|long\s+long|unsigned\s+long|signed\s+long|unsigned\s+int|signed\s+int|unsigned\s+short|signed\s+short|long\s+int|short\s+int|int|short|long)\b)");
+
+  for(std::sregex_iterator it(lineText.begin(), lineText.end(), kPattern),
+      end;
+      it != end;
+      ++it)
+  {
+    if(it->str() == "int")
+    {
+      const std::string kSuffix = lineText.substr(
+          static_cast<std::size_t>(it->position() + it->length()));
+      static const std::regex kMainPattern(R"(^\s+main\s*\()") ;
+      if(std::regex_search(kSuffix, kMainPattern))
+      {
+        continue;
+      }
+    }
+
+    findings.push_back(makeFinding(
+        rule,
+        "company-exact-width-integer-types",
+        file,
+        lineNumber,
+        static_cast<int>(it->position()) + 1,
+        "prefer exact-width integer types from <stdint.h>/<cstdint> instead of raw integer type '" +
+            it->str() + "'"));
+  }
+}
+
+auto appendModuleStructureFindings(const RuleSetting &rule,
+                                   const std::vector<fs::path> &files,
+                                   std::vector<Finding> &findings) -> void
+{
+  struct ModuleInfo
+  {
+    bool hasBaseHeader_ = false;
+    bool hasBaseImplementation_ = false;
+    fs::path anchorPath_;
+  };
+
+  std::unordered_map<std::string, ModuleInfo> modules;
+  for(const auto &file : files)
+  {
+    if(file.stem() == "main")
+    {
+      continue;
+    }
+
+    const std::string kParentDir = file.parent_path().filename().string();
+    if(kParentDir != "inc" && kParentDir != "src")
+    {
+      continue;
+    }
+
+    const std::string kModuleName =
+        file.parent_path().parent_path().filename().string();
+    if(kModuleName.empty() || !isSnakeCaseName(kModuleName))
+    {
+      continue;
+    }
+
+    ModuleInfo &module = modules[kModuleName];
+    if(module.anchorPath_.empty())
+    {
+      module.anchorPath_ = file;
+    }
+
+    const bool isHeader = isHeaderFile(file);
+    const bool isImplementation = isImplementationFile(file);
+    if((kParentDir == "inc" && !isHeader) || (kParentDir == "src" && !isImplementation))
+    {
+      findings.push_back(makeFinding(
+          rule,
+          "company-library-module-structure",
+          file,
+          1,
+          1,
+          "module files in '/" + kModuleName + "/" + kParentDir +
+              "' must use matching header/source extensions"));
+    }
+
+    const std::string kStem = file.stem().string();
+    if(kStem != kModuleName && kStem.rfind(kModuleName + "_", 0) != 0)
+    {
+      findings.push_back(makeFinding(
+          rule,
+          "company-library-module-structure",
+          file,
+          1,
+          1,
+          "module file '" + file.filename().string() +
+              "' must keep the '" + kModuleName + "' prefix"));
+    }
+
+    if(isHeader && kStem == kModuleName)
+    {
+      module.hasBaseHeader_ = true;
+    }
+    if(isImplementation && kStem == kModuleName)
+    {
+      module.hasBaseImplementation_ = true;
+    }
+  }
+
+  for(const auto &[moduleName, module] : modules)
+  {
+    if(module.hasBaseHeader_ && module.hasBaseImplementation_)
+    {
+      continue;
+    }
+
+    findings.push_back(makeFinding(
+        rule,
+        "company-library-module-structure",
+        module.anchorPath_,
+        1,
+        1,
+        "module '" + moduleName +
+            "' must provide at least one matching '" + moduleName +
+            ".h' header and '" + moduleName + ".c/.cc/.cpp/.cxx' source file"));
+  }
 }
 
 auto colorForSeverity(Severity severity) -> const char *
@@ -663,6 +866,226 @@ auto Runner::scanFiles(const std::vector<fs::path> &files,
   return {std::move(findings), hasCommandFailure.load()};
 }
 
+auto Runner::runRawChecks(const std::vector<fs::path> &files,
+                          const fs::path &projectRoot) const
+    -> std::vector<Finding>
+{
+  (void)projectRoot;
+
+  const auto kCommentRule = configuredRule(config_, "company-comment-style");
+  const auto kExactWidthRule =
+      configuredRule(config_, "company-exact-width-integer-types");
+  const auto kModuleStructureRule =
+      configuredRule(config_, "company-library-module-structure");
+
+  std::vector<Finding> findings;
+  if(!kCommentRule.has_value() && !kExactWidthRule.has_value() &&
+     !kModuleStructureRule.has_value())
+  {
+    return findings;
+  }
+
+  enum class LexState : std::uint8_t
+  {
+    Normal,
+    StringLiteral,
+    CharLiteral,
+    LineComment,
+    BlockComment,
+  };
+
+  for(const auto &file : files)
+  {
+    const auto kContents = readFileContents(file);
+    if(!kContents.has_value())
+    {
+      continue;
+    }
+
+    LexState state = LexState::Normal;
+    std::string codeOnLine;
+    std::string commentText;
+    int lineNumber = 1;
+    int columnNumber = 1;
+    int commentLine = 1;
+    int commentColumn = 1;
+    bool escaped = false;
+
+    const auto finalizeComment = [&]() {
+      if(kCommentRule.has_value() && looksLikeCommentedOutCode(commentText))
+      {
+        findings.push_back(makeFinding(
+            *kCommentRule,
+            "company-comment-style",
+            file,
+            commentLine,
+            commentColumn,
+            "commented-out code is not allowed"));
+      }
+      commentText.clear();
+    };
+
+    const auto finalizeLine = [&]() {
+      if(kExactWidthRule.has_value())
+      {
+        appendExactWidthFindings(
+            *kExactWidthRule, file, codeOnLine, lineNumber, findings);
+      }
+      codeOnLine.clear();
+    };
+
+    for(std::size_t index = 0; index < kContents->size(); ++index)
+    {
+      const char character = (*kContents)[index];
+      const char nextCharacter = index + 1 < kContents->size()
+                                     ? (*kContents)[index + 1]
+                                     : '\0';
+
+      if(character == '\n')
+      {
+        if(state == LexState::LineComment)
+        {
+          finalizeComment();
+          state = LexState::Normal;
+        }
+        else if(state == LexState::BlockComment)
+        {
+          commentText += character;
+        }
+
+        finalizeLine();
+        ++lineNumber;
+        columnNumber = 1;
+        escaped = false;
+        continue;
+      }
+
+      switch(state)
+      {
+      case LexState::Normal:
+        if(character == '/' && nextCharacter == '/')
+        {
+          if(kCommentRule.has_value() && lineHasCode(codeOnLine))
+          {
+            findings.push_back(makeFinding(
+                *kCommentRule,
+                "company-comment-style",
+                file,
+                lineNumber,
+                columnNumber,
+                "'//' comments must start on their own line"));
+          }
+
+          state = LexState::LineComment;
+          commentLine = lineNumber;
+          commentColumn = columnNumber;
+          commentText.clear();
+          ++index;
+          columnNumber += 2;
+          continue;
+        }
+
+        if(character == '/' && nextCharacter == '*')
+        {
+          state = LexState::BlockComment;
+          commentLine = lineNumber;
+          commentColumn = columnNumber;
+          commentText.clear();
+          ++index;
+          columnNumber += 2;
+          continue;
+        }
+
+        if(character == '"')
+        {
+          state = LexState::StringLiteral;
+          codeOnLine += ' ';
+          ++columnNumber;
+          continue;
+        }
+
+        if(character == '\'')
+        {
+          state = LexState::CharLiteral;
+          codeOnLine += ' ';
+          ++columnNumber;
+          continue;
+        }
+
+        codeOnLine += character;
+        ++columnNumber;
+        break;
+
+      case LexState::StringLiteral:
+        codeOnLine += ' ';
+        if(escaped)
+        {
+          escaped = false;
+        }
+        else if(character == '\\')
+        {
+          escaped = true;
+        }
+        else if(character == '"')
+        {
+          state = LexState::Normal;
+        }
+        ++columnNumber;
+        break;
+
+      case LexState::CharLiteral:
+        codeOnLine += ' ';
+        if(escaped)
+        {
+          escaped = false;
+        }
+        else if(character == '\\')
+        {
+          escaped = true;
+        }
+        else if(character == '\'')
+        {
+          state = LexState::Normal;
+        }
+        ++columnNumber;
+        break;
+
+      case LexState::LineComment:
+        commentText += character;
+        ++columnNumber;
+        break;
+
+      case LexState::BlockComment:
+        if(character == '*' && nextCharacter == '/')
+        {
+          finalizeComment();
+          state = LexState::Normal;
+          ++index;
+          columnNumber += 2;
+          continue;
+        }
+
+        commentText += character;
+        ++columnNumber;
+        break;
+      }
+    }
+
+    if(state == LexState::LineComment || state == LexState::BlockComment)
+    {
+      finalizeComment();
+    }
+    finalizeLine();
+  }
+
+  if(kModuleStructureRule.has_value())
+  {
+    appendModuleStructureFindings(*kModuleStructureRule, files, findings);
+  }
+
+  return findings;
+}
+
 auto Runner::printFindings(const std::vector<Finding> &findings,
                            const std::vector<fs::path> &checkedFiles,
                            const RunnerOutputOptions &outputOptions) -> void
@@ -812,6 +1235,8 @@ auto Runner::run(const fs::path &projectRoot, const fs::path &compileDbDir,
   logRunConfiguration(outputOptions_, kLogContext);
 
   auto [findings, hasCommandFailure] = scanFiles(kFiles, kRunPaths);
+  auto rawFindings = runRawChecks(kFiles, projectRoot);
+  findings.insert(findings.end(), rawFindings.begin(), rawFindings.end());
   sortFindings(findings);
   printFindings(findings, kFiles, outputOptions_);
   return exitCodeForRun(findings, hasCommandFailure);

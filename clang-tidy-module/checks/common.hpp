@@ -1,5 +1,7 @@
 #pragma once
 
+#include <filesystem>
+#include <optional>
 #include <regex>
 #include <string>
 
@@ -32,8 +34,34 @@ inline auto isUpperSnakeCase(const std::string &name) -> bool
 inline auto isModulePrefixedCamelCase(const std::string &name) -> bool
 {
   static const std::regex kPattern(
-      R"(^[a-z][A-Za-z0-9]*_[a-z][A-Za-z0-9]*$)");
+      R"(^[a-z][a-z0-9]*(?:_[a-z0-9]+)*_[a-z][A-Za-z0-9]*$)");
   return std::regex_match(name, kPattern);
+}
+
+inline auto moduleNameFromPath(const std::filesystem::path &path)
+    -> std::optional<std::string>
+{
+  const std::filesystem::path kParent = path.parent_path().filename();
+  if((kParent == "inc" || kParent == "src") &&
+     isSnakeCase(path.parent_path().parent_path().filename().string()))
+  {
+    return path.parent_path().parent_path().filename().string();
+  }
+
+  return std::nullopt;
+}
+
+inline auto hasExpectedModulePrefix(const std::string &name,
+                                    const std::string &moduleName) -> bool
+{
+  const std::string kPrefix = moduleName + "_";
+  if(name.rfind(kPrefix, 0) != 0)
+  {
+    return false;
+  }
+
+  const std::string kSuffix = name.substr(kPrefix.size());
+  return !kSuffix.empty() && isCamelCase(kSuffix);
 }
 
 inline auto hasBooleanPrefix(const std::string &name) -> bool

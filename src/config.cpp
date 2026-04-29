@@ -158,6 +158,11 @@ auto Config::clangTidyChecks() const -> const std::vector<std::string> &
   return clangTidyChecks_;
 }
 
+auto Config::hasRule(const std::string &checkName) const -> bool
+{
+  return rules_.contains(checkName);
+}
+
 auto Config::getRule(const std::string &checkName) const -> RuleSetting
 {
   const auto kIt = rules_.find(checkName);
