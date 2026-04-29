@@ -2,18 +2,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 DEFAULT_COMMIT_COUNT=20
-
-print_version() {
-  local version
-  version="$(sed -nE 's/^project\(checkpp VERSION ([0-9]+\.[0-9]+\.[0-9]+).*$/\1/p' "${PROJECT_ROOT}/CMakeLists.txt")"
-  if [ -z "${version}" ]; then
-    printf 'Failed to detect the project version from %s\n' "${PROJECT_ROOT}/CMakeLists.txt" >&2
-    return 1
-  fi
-  printf '%s\n' "${version}"
-}
+VERSION="0.0.0"
 
 usage() {
   cat <<EOF
@@ -42,9 +32,7 @@ DEPENDENCIES
     git, gh (optional for GitHub PR status details)
 ===============================================================
 IMPLEMENTATION
-    version         $(print_version)
-    project         checkpp
-    location        scripts/common/repo_status.sh
+    version         ${VERSION}
 EOF
 }
 
@@ -65,7 +53,7 @@ warn() {
 }
 
 repo_cmd() {
-  git -C "${PROJECT_ROOT}" "$@"
+  git -C "${WORKSPACE_DIR}" "$@"
 }
 
 current_branch_name() {
@@ -278,7 +266,7 @@ main() {
   fi
 
   if [ "${1:-}" = "--version" ] || [ "${1:-}" = "-v" ]; then
-    print_version
+    printf '%s\n' "${VERSION}"
     return 0
   fi
 
@@ -326,7 +314,7 @@ main() {
     esac
   done
 
-  printf 'Repository status for %s\n' "${PROJECT_ROOT}"
+  printf 'Repository status for %s\n' "${WORKSPACE_DIR}"
   printf 'Generated: %s\n' "$(date -Iseconds)"
 
   heading "Branch"

@@ -2,6 +2,7 @@
 set -euo pipefail
 
 SCRIPT_NAME="$(basename "$0")"
+VERSION="0.0.0"
 
 ROOT_PATH="."
 INCLUDE_HIDDEN=0
@@ -21,16 +22,24 @@ OPTIONS
   -d, --dirs-only      Show only directories.
   -L, --max-depth N    Limit recursion depth.
   -h, --help          Print this help.
+  -v, --version       Print the tool version.
 
 EXAMPLES
   ${SCRIPT_NAME}
   ${SCRIPT_NAME} ~/projects/checkpp
   ${SCRIPT_NAME} -a -L 2 .
+
+IMPLEMENTATION
+  version             ${SCRIPT_NAME} ${VERSION}
 EOF
 }
 
 short_help() {
   printf '%s\n' "Recursive ASCII tree for a path; options: -a, -d, -L N; example: $0 ."
+}
+
+print_version() {
+  printf '%s\n' "${VERSION}"
 }
 
 die() {
@@ -134,6 +143,10 @@ while [ "$#" -gt 0 ]; do
       ;;
     -h|--help)
       usage
+      exit 0
+      ;;
+    -v|--version)
+      print_version
       exit 0
       ;;
     --short-help)

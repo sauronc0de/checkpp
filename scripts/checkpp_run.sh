@@ -2,13 +2,12 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
 print_version() {
   local version
-  version="$(sed -nE 's/^project\(checkpp VERSION ([0-9]+\.[0-9]+\.[0-9]+).*$/\1/p' "${PROJECT_ROOT}/CMakeLists.txt")"
+  version="$(sed -nE 's/^project\(checkpp VERSION ([0-9]+\.[0-9]+\.[0-9]+).*$/\1/p' "${WORKSPACE_DIR}/CMakeLists.txt")"
   if [ -z "${version}" ]; then
-    printf 'Failed to detect the project version from %s\n' "${PROJECT_ROOT}/CMakeLists.txt" >&2
+    printf 'Failed to detect the project version from %s\n' "${WORKSPACE_DIR}/CMakeLists.txt" >&2
     exit 1
   fi
   printf '%s\n' "${version}"
@@ -43,13 +42,12 @@ DEPENDENCIES
 ===============================================================
 IMPLEMENTATION
     version         $(print_version)
-    project         checkpp
-    location        scripts/project_specific/run.sh
+    project         ${PROJECT_NAME}
 EOF
 }
 
 short_help() {
-  printf '%s\n' "Build and optionally run checkpp; example: $0 develop; dependencies: cmake and a configured preset."
+  printf '%s\n' "Build and optionally run ${PROJECT_NAME}; example: $0 develop; dependencies: cmake and a configured preset."
 }
 
 preset="release"
@@ -92,7 +90,7 @@ while [ "$#" -gt 0 ]; do
 done
 
 JOBS="${CMAKE_BUILD_PARALLEL_LEVEL:-$(nproc)}"
-build_dir="${PROJECT_ROOT}/build/${preset}"
+build_dir="${WORKSPACE_DIR}/build/${preset}"
 log_file="${build_dir}/checkpp_style_check.log"
 
 echo "Building project with preset: ${preset}"
@@ -111,11 +109,11 @@ fi
 
 echo ""
 echo "Running checkpp on itself..."
-echo "  Project: ${PROJECT_ROOT}"
+echo "  Project: ${WORKSPACE_DIR}"
 echo "  Compile DB: ${build_dir}"
-echo "  Rules: ${PROJECT_ROOT}/config/rules.yaml"
+echo "  Rules: ${WORKSPACE_DIR}/config/rules.yaml"
 if [ "${preset}" = "release" ]; then
-  echo "  Ignore paths: ${PROJECT_ROOT}/config/ignore_paths.txt"
+  echo "  Ignore paths: ${WORKSPACE_DIR}/config/ignore_paths.txt"
 else
   echo "  Plugin: ${build_dir}/clang-tidy-module/CompanyClangTidyModule.so"
 fi
@@ -125,11 +123,11 @@ echo ""
 mkdir -p "${build_dir}"
 
 set +e
-run_cmd=("${build_dir}/checkpp" "${PROJECT_ROOT}" "${build_dir}" "${PROJECT_ROOT}/config/rules.yaml")
+run_cmd=("${build_dir}/checkpp" "${WORKSPACE_DIR}" "${build_dir}" "${WORKSPACE_DIR}/config/rules.yaml")
 if [ "${preset}" = "release" ]; then
-  run_cmd+=(--ignore-paths "${PROJECT_ROOT}/config/ignore_paths.txt")
+  run_cmd+=(--ignore-paths "${WORKSPACE_DIR}/config/ignore_paths.txt")
 else
-  run_cmd+=(--plugin "${build_dir}/clang-tidy-module/CompanyClangTidyModule.so" --ignore-paths "${PROJECT_ROOT}/config/ignore_paths.txt")
+  run_cmd+=(--plugin "${build_dir}/clang-tidy-module/CompanyClangTidyModule.so" --ignore-paths "${WORKSPACE_DIR}/config/ignore_paths.txt")
 fi
 "${run_cmd[@]}" 2>&1 | tee "${log_file}"
 tool_exit_code=${PIPESTATUS[0]}

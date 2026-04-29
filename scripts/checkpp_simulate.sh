@@ -2,15 +2,14 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="${WORKSPACE_DIR}"
 SCRIPT_NAME="$(basename "$0")"
 
 source_dir=""
 source_dir_provided="NO"
 build_dir=""
 build_dir_provided="NO"
-checkpp_bin="${PROJECT_ROOT}/build/release/checkpp"
-rules_file="${PROJECT_ROOT}/config/rules_c_family.yaml"
+checkpp_bin="${WORKSPACE_DIR}/build/release/checkpp"
+rules_file="${WORKSPACE_DIR}/config/rules_c_family.yaml"
 ignore_paths=""
 ignore_paths_provided="NO"
 positional_source_dir=""
@@ -18,9 +17,9 @@ verbose="NO"
 
 print_version() {
   local version
-  version="$(sed -nE 's/^project\(checkpp VERSION ([0-9]+\.[0-9]+\.[0-9]+).*$/\1/p' "${PROJECT_ROOT}/CMakeLists.txt")"
+  version="$(sed -nE 's/^project\(checkpp VERSION ([0-9]+\.[0-9]+\.[0-9]+).*$/\1/p' "${WORKSPACE_DIR}/CMakeLists.txt")"
   if [ -z "${version}" ]; then
-    printf 'Failed to detect the project version from %s\n' "${PROJECT_ROOT}/CMakeLists.txt" >&2
+    printf 'Failed to detect the project version from %s\n' "${WORKSPACE_DIR}/CMakeLists.txt" >&2
     return 1
   fi
   printf '%s\n' "${version}"
@@ -59,7 +58,7 @@ EXAMPLES
 IMPLEMENTATION
     version         $(print_version)
     project         checkpp
-    location        scripts/project_specific/simulate_checkpp.sh
+    location        scripts/checkpp_simulate.sh
 EOF
 }
 

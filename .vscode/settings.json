@@ -4,9 +4,6 @@
         "examples": true,
         "libraries": true
     },
-    "terminal.integrated.env.linux": {
-        "PATH": "${workspaceFolder}/tools/tasks:${env:PATH}",
-    },
     "terminal.integrated.defaultProfile.linux": "bash",
     "git.postCommitCommand": "push",
     "clangd.arguments": [
@@ -71,7 +68,7 @@
                 "useVsCodeApi": true,
                 "command": "workbench.action.tasks.runTask",
                 "args": [
-                    "run.sh"
+                    "checkpp_run.sh"
                 ]
             },
             {
@@ -82,7 +79,7 @@
                 "useVsCodeApi": true,
                 "command": "workbench.action.tasks.runTask",
                 "args": [
-                    "release.sh"
+                    "checkpp_release.sh"
                 ]
             },
             {
@@ -92,7 +89,7 @@
                 "useVsCodeApi": true,
                 "command": "workbench.action.tasks.runTask",
                 "args": [
-                    "build.sh"
+                    "checkpp_build.sh"
                 ]
             }
         ],

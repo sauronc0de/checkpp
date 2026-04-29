@@ -4,7 +4,7 @@ set -o pipefail
 
 SCRIPT_NAME="$(basename "$0")"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-VERSION="0.4.0"
+VERSION="0.0.0"
 
 ROOTS=()
 RECURSIVE=1
@@ -90,10 +90,8 @@ usage() {
     ${SCRIPT_NAME} --no-recursive
     ${SCRIPT_NAME} --root ./scripts
 
- IMPLEMENTATION
+IMPLEMENTATION
     version         ${VERSION}
-    script          ${SCRIPT_NAME}
-    location        scripts/common/help.sh
 EOF
 }
 
@@ -139,11 +137,11 @@ while [ "$#" -gt 0 ]; do
             exit 0
             ;;
         -v|--version)
-            printf '%s %s\n' "$SCRIPT_NAME" "$VERSION"
+            printf '%s\n' "$VERSION"
             exit 0
             ;;
         --short-help)
-            printf 'List executable tools recursively by default; example: %s --no-recursive --root ./scripts.\n' "$SCRIPT_NAME"
+            printf 'List scripts recursively by default; example: %s --no-recursive --root ./scripts.\n' "$SCRIPT_NAME"
             exit 0
             ;;
         *)

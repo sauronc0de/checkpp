@@ -2,8 +2,8 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "build.sh",
-            "command": "${workspaceFolder}/scripts/build.sh",
+            "label": "checkpp_build.sh",
+            "command": "${workspaceFolder}/scripts/checkpp_build.sh",
             "type": "shell",
             "args": [
                 "${command:cmake.buildTargetName}",
@@ -14,9 +14,9 @@
             }
         },
         {
-            "label": "run.sh",
+            "label": "checkpp_run.sh",
             "type": "shell",
-            "command": "run.sh",
+            "command": "${workspaceFolder}/scripts/checkpp_run.sh",
             "args": [
                 "${command:cmake.activeConfigurePresetName}"
             ],
@@ -32,9 +32,9 @@
             "problemMatcher": []
         },
         {
-            "label": "release.sh",
+            "label": "checkpp_release.sh",
             "type": "shell",
-            "command": "${workspaceFolder}/scripts/release.sh",
+            "command": "${workspaceFolder}/scripts/checkpp_release.sh",
             "args": [],
             "detail": "Run the strict release workflow",
             "options": {

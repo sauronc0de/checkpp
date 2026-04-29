@@ -5,6 +5,7 @@ SCRIPT_NAME="$(basename "$0")"
 VERSION="0.2.0"
 DEFAULT_SECONDS=5
 DEFAULT_MESSAGE="Loading"
+VERSION="0.0.0"
 
 supports_color() {
   [ "${CLICOLOR_FORCE:-0}" != "0" ] && return 0
@@ -63,9 +64,6 @@ EXAMPLES
 
 IMPLEMENTATION
     version         ${VERSION}
-    project         checkpp
-    location        scripts/common/loading.sh
-    dependencies    bash, sleep
 EOF
 }
 

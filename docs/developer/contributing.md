@@ -31,7 +31,7 @@ When updating docs:
 - `clang-tidy-module/` contains the custom checks
 - `config/` contains bundled example rule profiles
 - `docs/` contains user, developer, and reference documentation
-- `tools/` contains helper tooling and release-related support code
+- `scripts/` contains helper tooling and release-related support code
 
 ## Extending the project
 
@@ -43,4 +43,4 @@ If you add or change rules, keep the user-facing docs aligned:
 
 For tooling-specific conventions, see:
 
-- [Tool guidelines](../tools_guidelines.md)
+- [Tool guidelines](../scripts_guidelines.md)

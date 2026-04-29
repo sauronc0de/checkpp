@@ -3,17 +3,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-
-print_version() {
-  local version
-  version="$(sed -nE 's/^project\(checkpp VERSION ([0-9]+\.[0-9]+\.[0-9]+).*$/\1/p' "${PROJECT_ROOT}/CMakeLists.txt")"
-  if [ -z "${version}" ]; then
-    printf 'Failed to detect the project version from %s\n' "${PROJECT_ROOT}/CMakeLists.txt" >&2
-    exit 1
-  fi
-  printf '%s\n' "${version}"
-}
+VERSION="0.0.0"
 
 usage() {
   cat <<EOF
@@ -38,9 +28,7 @@ DEPENDENCIES
     git with push access to the configured remote
 ===============================================================
 IMPLEMENTATION
-    version         $(print_version)
-    project         checkpp
-    location        scripts/common/clean_branches.sh
+    version         ${VERSION}
 EOF
 }
 
@@ -59,7 +47,7 @@ if [ "${1:-}" = "--short-help" ]; then
 fi
 
 if [ "${1:-}" = "--version" ] || [ "${1:-}" = "-v" ]; then
-  print_version
+  printf '%s\n' "${VERSION}"
   exit 0
 fi
 

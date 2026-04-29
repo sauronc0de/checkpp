@@ -2,8 +2,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-RELEASE_CONFIG="${RELEASE_CONFIG:-${PROJECT_ROOT}/scripts/project_specific/release.config.sh}"
+RELEASE_CONFIG="${RELEASE_CONFIG:-${WORKSPACE_DIR}/scripts/release.config.sh}"
 
 release_die() {
   printf '\033[31mRelease failed: %s\033[0m\n' "$1" >&2
@@ -25,7 +24,7 @@ source "$RELEASE_CONFIG"
 : "${RELEASE_REMOTE:=origin}"
 : "${RELEASE_PRESET:=release}"
 : "${RELEASE_VERSION_SOURCE:=CMakeLists.txt}"
-: "${RELEASE_PROJECT_ROOT:=$PROJECT_ROOT}"
+: "${RELEASE_PROJECT_ROOT:=$WORKSPACE_DIR}"
 
 release_require_cmd() {
   command -v "$1" >/dev/null 2>&1 || release_die "Required command not found: $1"
@@ -345,13 +344,11 @@ EXAMPLES
     $0
 
 DEPENDENCIES
-    git, gh, cmake, sha256sum
+    git, gh, cmake, sha256sum, ${RELEASE_CONFIG}
 
 IMPLEMENTATION
     version         $(release_project_version)
     project         ${RELEASE_PROJECT_NAME}
-    config          ${RELEASE_CONFIG}
-    location        scripts/common/release.sh
 EOF
 }
 

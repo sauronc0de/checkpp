@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 
 RELEASE_PROJECT_NAME="checkpp"
-RELEASE_PROJECT_ROOT="$PROJECT_ROOT"
+RELEASE_PROJECT_ROOT="$WORKSPACE_DIR"
 RELEASE_REMOTE="origin"
 RELEASE_PRESET="release"
 RELEASE_VERSION_SOURCE="CMakeLists.txt"
 
-RELEASE_PACKAGE_BINARY_PATH="${PROJECT_ROOT}/build/${RELEASE_PRESET}/checkpp"
+RELEASE_PACKAGE_BINARY_PATH="${WORKSPACE_DIR}/build/${RELEASE_PRESET}/checkpp"
 RELEASE_CHECKER_BINARY_PATH="$RELEASE_PACKAGE_BINARY_PATH"
 
-RELEASE_RULES_PATH="${PROJECT_ROOT}/config/rules.yaml"
-RELEASE_IGNORE_PATHS_PATH="${PROJECT_ROOT}/config/ignore_paths.txt"
+RELEASE_RULES_PATH="${WORKSPACE_DIR}/config/rules.yaml"
+RELEASE_IGNORE_PATHS_PATH="${WORKSPACE_DIR}/config/ignore_paths.txt"
 
 RELEASE_PACKAGE_BINARY_ASSET_NAME="checkpp"
 RELEASE_RULES_ASSET_NAME="rules"
@@ -18,8 +18,8 @@ RELEASE_IGNORE_PATHS_ASSET_NAME="ignore_paths.txt"
 
 release_config_run_checker() {
   "$RELEASE_CHECKER_BINARY_PATH" \
-    "$PROJECT_ROOT" \
-    "${PROJECT_ROOT}/build/${RELEASE_PRESET}" \
+    "$WORKSPACE_DIR" \
+    "${WORKSPACE_DIR}/build/${RELEASE_PRESET}" \
     "$RELEASE_RULES_PATH" \
     --ignore-paths "$RELEASE_IGNORE_PATHS_PATH"
 }
@@ -33,8 +33,8 @@ release_config_package_extra_assets() {
   : "$release_dir"
   : "$tag"
 
-  cp "${PROJECT_ROOT}/config/rules_c_family.yaml" "$c_family_dst"
-  cp "${PROJECT_ROOT}/config/rules_c_family_cpp.yaml" "$c_family_cpp_dst"
+  cp "${WORKSPACE_DIR}/config/rules_c_family.yaml" "$c_family_dst"
+  cp "${WORKSPACE_DIR}/config/rules_c_family_cpp.yaml" "$c_family_cpp_dst"
 
   printf '%s\n' "$c_family_dst" "$c_family_cpp_dst"
 }

@@ -1,6 +1,6 @@
 ---
 name: sc-review
-description: execute predefined project reviews for a named process using a user-maintained config in docs/sc-config.yaml, validate required inputs, optionally scope findings to the active release milestone defined in config defaults or process overrides, generate a structured review report, and either keep it local by default or publish it when explicitly requested. use when the user asks to run review commands such as /sc-review tools, /sc-review tools --publish github, /sc-review tools --publish local, or /sc-review tools --ignore-milestone. coordinate github issue publishing through /sc-gh-issue instead of creating or updating issues directly.
+description: execute predefined project reviews for a named process using a user-maintained config in docs/sc-config.yaml, validate required inputs, optionally scope findings to the active release milestone defined in config defaults or process overrides, generate a structured review report, and either keep it local by default or publish it when explicitly requested. use when the user asks to run review commands such as /sc-review scripts, /sc-review scripts --publish github, /sc-review scripts --publish local, or /sc-review scripts --ignore-milestone. coordinate github issue publishing through /sc-gh-issue instead of creating or updating issues directly.
 metadata:
   version: "0.0.0"
 ---
@@ -9,7 +9,7 @@ metadata:
 
 ## Overview
 
-Use this skill to run a predefined review for a named process such as `tools`.
+Use this skill to run a predefined review for a named process such as `scripts`.
 Resolve review definitions and the SC-SDD policy contract from `docs/sc-config.yaml`.
 Default to a draft review with no publication.
 Only publish when the user explicitly requests `--publish github` or `--publish local`.
@@ -184,10 +184,20 @@ Normalize this into:
 
 Examples:
 
-- process `tools`, naming `review-tools{milestone_suffix}`, no milestone → file `review-tools.md`, issue title `review tools`
-- process `tools`, naming `review-tools{milestone_suffix}`, milestone `M0` → file `review-tools-m0.md`, issue title `review tools m0`
+- process `scripts`, naming `review-scripts{milestone_suffix}`, no milestone → file `review-scripts.md`, issue title `review scripts`
+- process `scripts`, naming `review-scripts{milestone_suffix}`, milestone `M0` → file `review-scripts-m0.md`, issue title `review scripts m0`
 
 If the GitHub issue already exists, the GitHub issue publication flow must add a comment instead of creating a new issue.
+
+### Pattern 9: script prefix checks distinguish project-specific and portable scripts
+
+When the reviewed process is `scripts`, apply the script naming guideline by first classifying each executable script:
+
+- Project-specific scripts encode repository-specific build, run, release, cleanup, simulation, paths, metadata, or other `checkpp` workflow assumptions. These scripts must use the `${PROJECT_NAME}_` prefix, for example `checkpp_simulate.sh`.
+- Portable or reusable scripts can run unchanged in another repository or environment and do not depend on `checkpp` project state, paths, build presets, release metadata, or conventions. These scripts must keep their generic name, for example `tree_view.sh`.
+- Non-entrypoint support files such as sourced config fragments may use descriptive generic names when they are not intended to be executed directly.
+
+Do not enforce `${PROJECT_NAME}_` for every executable script. Report missing prefixes only for project-specific executable scripts, and report unnecessary prefixes when a portable/reusable executable script has been prefixed.
 
 ## Review Report Structure
 
@@ -255,7 +265,7 @@ When `--publish github` is requested, prepare a normalized publication request f
 Use wording equivalent to:
 
 ```text
-/sc-gh-issue create-or-comment --title "review tools m0" --body "<report markdown>"
+/sc-gh-issue create-or-comment --title "review scripts m0" --body "<report markdown>"
 ```
 
 The exact syntax may vary according to the configured GitHub issue skill command, but the behavior must remain the same:
@@ -287,16 +297,16 @@ defaults:
   milestone: docs/release_milestone.md
 
 processes:
-  tools:
+  scripts:
     guidelines:
-      - docs/guidelines/tools_guidelines.md
+      - docs/guidelines/scripts_guidelines.md
     actions:
       review:
         inputs:
           primary:
-            - tools/
+            - scripts/
         outputs:
-          naming: review-tools{milestone_suffix}
+          naming: review-scripts{milestone_suffix}
           template_file: none
 ```
 

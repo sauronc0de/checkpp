@@ -68,13 +68,13 @@ policy_contract:
     report_when_undefined: true
 
 processes:
-  tools:
+  scripts:
     default:
       mode: draft
       publish: none
       local_review_output_dir: docs/review
     guidelines:
-      - docs/guidelines/tools_guidelines.md
+      - docs/guidelines/scripts_guidelines.md
 
     actions:
       create:
@@ -83,8 +83,8 @@ processes:
       review:
         inputs:
           primary:
-            - tools/
+            - scripts/
 
         outputs:
-          naming: review-tools{milestone_suffix}
+          naming: review-scripts{milestone_suffix}
           template_file: none
