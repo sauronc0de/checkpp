@@ -79,7 +79,7 @@
                 "useVsCodeApi": true,
                 "command": "workbench.action.tasks.runTask",
                 "args": [
-                    "checkpp_release.sh"
+                    "release.sh"
                 ]
             },
             {

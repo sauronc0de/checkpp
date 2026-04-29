@@ -32,9 +32,9 @@
             "problemMatcher": []
         },
         {
-            "label": "checkpp_release.sh",
+            "label": "release.sh",
             "type": "shell",
-            "command": "${workspaceFolder}/scripts/checkpp_release.sh",
+            "command": "${workspaceFolder}/scripts/release.sh",
             "args": [],
             "detail": "Run the strict release workflow",
             "options": {
