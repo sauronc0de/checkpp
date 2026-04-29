@@ -3,6 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RELEASE_CONFIG="${RELEASE_CONFIG:-${WORKSPACE_DIR}/scripts/release.config.sh}"
+VERSION ="0.0.0"
 
 release_die() {
   printf '\033[31mRelease failed: %s\033[0m\n' "$1" >&2
@@ -347,8 +348,7 @@ DEPENDENCIES
     git, gh, cmake, sha256sum, ${RELEASE_CONFIG}
 
 IMPLEMENTATION
-    version         $(release_project_version)
-    project         ${RELEASE_PROJECT_NAME}
+    version         ${VERSION}
 EOF
 }
 
