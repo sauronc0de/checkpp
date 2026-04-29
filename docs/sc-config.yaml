@@ -1,14 +1,78 @@
 version: 1
 
-defaults:
-  mode: draft
-  publish: none
-  local_review_output_dir: docs/review
-  github_issue_skill_command: /sc-gh-issue
-  milestone: docs/release_milestone.md
+policy_contract:
+  version: "1.0"
+  document: docs/sc-sdd-policy-contract.md
+  scope: SC-over-SDD governance for create, edit, implementation, review, issue publication, and issue-driven work
+  github_issues:
+    single_publication_endpoint: true
+    publication_skill_command: /sc-gh-issue
+    require_milestone: true
+    duplicate_behavior: create-or-comment
+    search_states:
+      - open
+      - closed
+  milestone:
+    default_file: docs/release_milestone.md
+    resolve_from: explicit input, otherwise first H1 in default milestone file
+    missing_behavior: stop before GitHub publication; report missing milestone for milestone-scoped reviews
+  guideline_resolution:
+    config_first: true
+    selective_loading: true
+    load_only_matching_process: true
+    include_policy_document_when_referenced: true
+    unrelated_guidelines: do-not-load
+  sdd_metadata_required:
+    - policy_version
+    - process
+    - action
+    - change_name
+    - milestone
+    - guidelines_used
+    - references_used
+    - inputs_used
+    - publication_target
+    - github_issue_skill
+    - validation_sources
+    - sc_status
+    - sdd_status
+  mappings:
+    severities:
+      info: non-blocking context
+      warning: non-blocking concern
+      error: blocking issue
+    sdd_status_to_sc_decision:
+      success: pass
+      partial: pass-with-concerns
+      blocked: fail
+    sc_decision_rules:
+      pass: no errors
+      pass-with-concerns: warnings and no errors
+      fail: one or more errors or missing required dependencies
+  validation:
+    resolution: process-action-guideline-driven
+    source_order:
+      - matched process action validation instructions
+      - matched process validation instructions
+      - matched process guidelines and references
+      - explicit validation instructions from the request or SDD artifacts
+    required_evidence:
+      - validation sources used
+      - checks or commands run, when defined
+      - pass/fail/blocker result for each check
+      - skipped or unavailable checks with reasons
+    blocker_policy:
+      missing_required_validation: blocking issue
+      unavailable_required_tooling: blocking issue when the matched process/action/guideline marks it required
+      undefined_validation: report as not configured; do not invent global commands
+    report_when_undefined: true
 
 processes:
   tools:
+    default:
+      mode: draft
+      publish: none
+      local_review_output_dir: docs/review
     guidelines:
       - docs/guidelines/tools_guidelines.md
 
@@ -18,9 +82,9 @@ processes:
 
       review:
         inputs:
+          primary:
             - tools/
 
         outputs:
           naming: review-tools{milestone_suffix}
           template_file: none
-    

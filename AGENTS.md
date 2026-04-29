@@ -2,6 +2,18 @@
 
 When working on this project, load the relevant skill(s) BEFORE writing any code.
 
+## Mandatory Project Governance
+
+Before any create, edit, implementation, review, or GitHub issue work:
+
+1. Read `docs/sc-config.yaml` first.
+2. Use that config to resolve only the process, action, guideline, reference, milestone, or policy paths relevant to the task.
+3. If the task matches a configured process, type, action, or path, read only that matching process's required guidelines/references before proceeding.
+4. If no relevant process, guideline, reference, milestone, or policy is configured for the task, proceed without loading extra docs.
+5. Do not load unrelated guidelines, references, policies, milestones, or process docs.
+6. Treat `docs/sc-sdd-policy-contract.md` as the human-readable governance policy when it exists and/or is referenced by `docs/sc-config.yaml`; do not require it unconditionally when config does not reference it.
+7. When delegating to sub-agents, include the resolved relevant config, policy, guideline, reference, and milestone paths in the prompt.
+
 ## How to Use
 
 1. Check the trigger column to find skills that match your current task

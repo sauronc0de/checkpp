@@ -5,7 +5,15 @@ description: create or modify project artifacts using docs/sc-config.yaml. use w
 
 # SC Create
 
-Create or modify process-defined project artifacts using `docs/sc-config.yaml`, shared guidelines, milestone context, and required creation inputs.
+Create or modify process-defined project artifacts using `docs/sc-config.yaml`, shared guidelines, milestone context, required creation inputs, and the configured SC-SDD policy contract when present.
+
+## SC-SDD Governance Overlay
+
+- Load `docs/sc-config.yaml` before any create, edit, implementation, or handoff work.
+- If `policy_contract.document` is configured and relevant to the request, treat that document as the human-readable governance policy and load it after the config.
+- Use SC as the governance wrapper and SDD as the lifecycle for substantive changes. Small mechanical edits may proceed directly after config-first resolution; larger create/edit/implementation work should be framed as an SDD change with proposal/spec/design/tasks/apply/verify artifacts or handed off to the appropriate SDD phase.
+- Preserve and pass policy metadata in SDD handoffs: policy version, process, action, change name/topic, milestone, guidelines used, references used, inputs used, validation sources, publication target, and GitHub issue skill.
+- Do not modify global/upstream SDD skills unless explicitly required; prefer project-local SC wrapper behavior.
 
 ## Trigger and Scope
 
@@ -67,12 +75,13 @@ Do not read all configured guideline files.
 For every task:
 
 1. Read `docs/sc-config.yaml` only.
-2. Identify the single best matching process, if any.
-3. If no process clearly matches, do not load any guideline files.
-4. If one process matches, load only that process's `guidelines`.
-5. Resolve only the relevant action, normally `processes.<process>.actions.create`.
-6. Load only input files explicitly required by that action or directly needed to complete the request.
-7. Never load guidelines or inputs from unrelated processes.
+2. If `policy_contract.document` is configured and relevant, load that policy document.
+3. Identify the single best matching process, if any.
+4. If no process clearly matches, do not load any guideline files.
+5. If one process matches, load only that process's `guidelines`.
+6. Resolve only the relevant action, normally `processes.<process>.actions.create`.
+7. Load only input files explicitly required by that action or directly needed to complete the request.
+8. Never load guidelines or inputs from unrelated processes.
 
 ## Workflow
 
@@ -84,18 +93,31 @@ For every task:
    - Explicit command process wins.
    - Otherwise match by target path, artifact type, action type, or process name.
    - If no process clearly matches, continue without process guidelines.
-4. Resolve `processes.<process>.actions.create`.
-5. Load only `processes.<process>.guidelines` for the matched process.
-6. Load milestone context only when all of these are true:
+4. Resolve `policy_contract` and load `policy_contract.document` when it governs the requested work.
+5. Resolve `processes.<process>.actions.create`.
+6. Load only `processes.<process>.guidelines` for the matched process.
+7. Load milestone context only when all of these are true:
    - `--ignore-milestone` was not provided.
    - `defaults.milestone` or an action/process-specific milestone file is configured.
    - The task could be affected by release scope, milestone constraints, naming, or acceptance criteria.
-7. Load only action-defined inputs that are required to create or edit the artifact.
-8. Gather only missing required fields. Do not ask for information already present in the request, config, guidelines, milestone, or required inputs.
-9. Create or modify the requested artifact.
-10. Write files by default once required fields are available.
-11. Do not create or modify files on the default `main` branch. Create a new branch for the work and create a pull request when finished.
-12. End with a brief source-only completion report.
+8. Load only action-defined inputs that are required to create or edit the artifact.
+9. For substantive changes, create or require an SDD change handoff instead of treating implementation as an untracked one-off edit.
+10. Gather only missing required fields. Do not ask for information already present in the request, config, policy, guidelines, milestone, or required inputs.
+11. Create or modify the requested artifact once required fields are available.
+12. Do not create or modify files on the default `main` branch. Create a new feature branch before editing when needed.
+13. End with a brief source-only completion report plus any SDD handoff metadata used.
+
+## SDD Handoff Metadata
+
+When work is routed into SDD, include:
+
+- `policy_version` from `policy_contract.version`
+- process and action keys
+- change name or issue/review topic
+- milestone source and resolved milestone
+- guideline/reference/input paths actually loaded
+- validation sources resolved from the matched process/action/guidelines; if none are defined, state that validation is not configured instead of inventing global commands
+- publication target and configured GitHub issue skill when publication is expected
 
 ## Process Matching Guidance
 

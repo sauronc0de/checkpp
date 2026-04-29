@@ -7,7 +7,15 @@ metadata:
 
 # sc-gh-issue
 
-Publish concise GitHub issue updates with `gh` in the current repository. Prefer commenting on an existing same-topic issue over creating a duplicate.
+Publish concise GitHub issue updates with `gh` in the current repository. This is the single GitHub issue publication endpoint for SC workflows. Prefer commenting on an existing same-topic issue over creating a duplicate.
+
+## SC-SDD Governance Overlay
+
+- Load `docs/sc-config.yaml` before GitHub issue work and resolve `defaults.github_issue_skill_command`, `defaults.milestone`, and `policy_contract.github_issues` when present.
+- If `policy_contract.document` is configured, treat it as the human-readable publication policy when duplicate, milestone, or handoff behavior is unclear.
+- Enforce milestone resolution for every created issue and for comments when the source workflow is milestone-scoped.
+- Search for duplicates across open and closed issues before creating anything.
+- Other SC skills (`sc-create`, `sc-review`, `sc-work`) must hand off to this skill rather than creating or commenting on issues directly.
 
 ## Inputs
 
@@ -35,6 +43,8 @@ Resolve milestone from explicit `--milestone`; otherwise parse the first H1 in `
 - `# Release milestone M0` -> `M0`
 
 If repository, owner, title, body, parent, or milestone cannot be resolved, stop before writing and report the missing value.
+
+If `docs/sc-config.yaml` configures a different milestone path under `defaults.milestone`, use that configured path instead of the hardcoded default above.
 
 ## Duplicate check
 

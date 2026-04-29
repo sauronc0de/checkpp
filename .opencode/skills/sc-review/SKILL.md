@@ -10,21 +10,30 @@ metadata:
 ## Overview
 
 Use this skill to run a predefined review for a named process such as `tools`.
-Resolve review definitions from `docs/sc-config.yaml`.
+Resolve review definitions and the SC-SDD policy contract from `docs/sc-config.yaml`.
 Default to a draft review with no publication.
 Only publish when the user explicitly requests `--publish github` or `--publish local`.
+
+## SC-SDD Governance Overlay
+
+- Load `docs/sc-config.yaml` first. If `policy_contract.document` is configured, load it when reviewing SC-governed SDD outputs or publishing findings.
+- Accept SDD verification output as review input when supplied, but normalize it into the SC report structure below.
+- Map SDD statuses through the configured policy mapping: `success` -> `pass`, `partial` -> `pass-with-concerns`, `blocked` -> `fail`.
+- Map SDD risks/findings to SC severities: informational context -> `info`, non-blocking risk -> `warning`, blocking verification failure -> `error`.
+- Preserve publication behavior: GitHub publication must be handed off to the configured GitHub issue skill command, never performed directly in this skill.
 
 ## Workflow
 
 1. Parse the requested process name and optional flags.
-2. Load `docs/sc-config.yaml` and resolve `processes.<process>.actions.review`, merged with shared context from `processes.<process>` and defaults. If the review action is missing, stop and return a blocking result.
-3. Validate all required inputs.
-4. If milestone scoping is enabled for the review and not overridden with `--ignore-milestone`, load the configured milestone file from process overrides or `defaults.milestone` and resolve the active milestone from the first H1.
-5. Review only the declared in-scope content.
-6. Produce a structured report.
-7. If `--publish github` was requested, delegate publication to the configured GitHub issue skill command.
-8. If `--publish local` was requested, write the markdown report under the configured local output directory using the naming convention below.
-9. If no publish target was requested, return the report as a draft and do not create or update anything.
+2. Load `docs/sc-config.yaml` and resolve `policy_contract`, then `processes.<process>.actions.review`, merged with shared context from `processes.<process>` and defaults. If the review action is missing, stop and return a blocking result.
+3. Load the configured policy document only when relevant to the review, verification mapping, or publication.
+4. Validate all required inputs.
+5. If milestone scoping is enabled for the review and not overridden with `--ignore-milestone`, load the configured milestone file from process overrides or `defaults.milestone` and resolve the active milestone from the first H1.
+6. Review only the declared in-scope content.
+7. Produce a structured report using the configured severity/status mapping.
+8. If `--publish github` was requested, delegate publication to the configured GitHub issue skill command.
+9. If `--publish local` was requested, write the markdown report under the configured local output directory using the naming convention below.
+10. If no publish target was requested, return the report as a draft and do not create or update anything.
 
 ## Command Contract
 
@@ -125,7 +134,7 @@ When milestone scoping is active:
 
 ### Pattern 6: severity and decision model
 
-Use exactly these severities:
+Use exactly these severities, aligned with `policy_contract.mappings`:
 
 - `info`
 - `warning`
@@ -142,6 +151,12 @@ Blocking rule:
 - every `error` is blocking
 - `warning` is non-blocking
 - `info` never changes pass or fail
+
+SDD verification status mapping:
+
+- `success` maps to `pass` unless warnings are present
+- `partial` maps to `pass-with-concerns` unless blocking errors are present
+- `blocked` maps to `fail`
 
 ### Pattern 7: publication is separate from analysis
 
@@ -293,6 +308,7 @@ Use the config as the source of truth for:
 - naming patterns
 - local output directory
 - github publication command
+- SC-SDD policy document and severity/status mappings
 
 ### Config resolution contract
 

@@ -9,6 +9,14 @@ metadata:
 
 Autonomously process current milestone GitHub issues assigned to the local Git identity.
 
+## SC-SDD Governance Overlay
+
+- Load `docs/sc-config.yaml` before issue selection or repository changes.
+- If `policy_contract.document` is configured, load it when dispatching implementation, review, blocker, or result publication work.
+- Treat issue-driven implementation as SDD-governed work when it is more than a small mechanical edit: use `sc-create` to resolve process/action/guidelines and hand off into SDD concepts as needed.
+- Use `sc-review` or SDD verification outputs for validation, then map the result through the configured SC severity/status mapping.
+- Use `sc-gh-issue` for all blockers, result comments, split tasks, and review publication. Do not create or comment on GitHub issues directly from this skill.
+
 ## Command
 
 Support:
@@ -74,12 +82,12 @@ For blocked jobs, add one concise blocker comment by delegating to `/sc-gh-issue
 
 For feasible jobs:
 
-1. Inspect repo context and nearby conventions.
+1. Inspect repo context and nearby conventions only after config-first resolution.
 2. Check whether `docs/sc-config.yaml` defines a matching process and `actions.create`.
-3. If a process applies, use `/sc-create <process> <issue request>`.
-4. If no process applies, implement directly using project conventions.
-5. Run relevant tests, builds, linters, or focused validation.
-6. Run `/sc-review <process>` when a matching process exists; otherwise perform a focused self-review.
+3. If a process applies, use `/sc-create <process> <issue request>` and preserve policy metadata in any SDD handoff.
+4. If no process applies and the work is substantive, route through SDD concepts before implementation; only small mechanical edits may be implemented directly using project conventions.
+5. Run relevant tests, builds, linters, or focused validation resolved from the matched process/action/guidelines; if none are defined, report validation as not configured.
+6. Run `/sc-review <process>` when a matching process exists, or consume SDD verification output and map it to SC status; otherwise perform a focused self-review.
 7. If complete, update the issue with a concise completion comment through `/sc-gh-issue create-or-comment`.
 8. If partly complete or newly blocked, comment status and blocker through `/sc-gh-issue create-or-comment`.
 
