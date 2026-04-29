@@ -48,3 +48,6 @@ fi
 if ! grep -Fqx "$path_line" "$bashrc_path"; then
   printf '%s\n' "$path_line" >> "$bashrc_path"
 fi
+
+# Update the git submodules
+git submodule update --init --recursive
