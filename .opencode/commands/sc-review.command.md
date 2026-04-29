@@ -1,6 +1,6 @@
 ---
 description: Run a configured project review and optionally publish it
-agent: plan
+agent: sdd-orchestrator
 subtask: true
 ---
 
