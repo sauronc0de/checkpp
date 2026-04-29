@@ -12,13 +12,11 @@ echo "🔐 Applying permissions to: $WORKSPACE_DIR"
 # Set the current user as the owner of all files under the workspace directory
 sudo chown --no-dereference -R "$(whoami)" "$WORKSPACE_DIR"
 
-# Make scripts and programs executable
-sudo chmod -R +x ./tools/scripts
-sudo chmod -R +x ./tools/programs
+# Make scripts executable
+chmod -R a+x "$WORKSPACE_DIR/scripts"
 
-# Add tools to PATH for the current shell session
-# This allows calling programs and scripts without specifying their path
-export PATH="$PATH:$WORKSPACE_DIR/tools/tasks:$WORKSPACE_DIR/tools/programs:$WORKSPACE_DIR/tools/scripts"
+# Make commands visible from anywhere
+export PATH="$PATH:$WORKSPACE_DIR/scripts"
 
 echo "📁 Linking opencode folder to user home directory"
 
@@ -30,7 +28,7 @@ mkdir -p "$HOME/.local/share" \
 bashrc_path="$HOME/.bashrc"
 gh_env_path="$HOME/.local/share/opencode/gh.env"
 gh_env_source_line='source "$HOME/.local/share/opencode/gh.env"'
-path_line='export PATH="$PATH:$WORKSPACE_DIR/tools/tasks:$WORKSPACE_DIR/tools/programs:$WORKSPACE_DIR/tools/scripts"'
+path_line='export PATH="$PATH:$WORKSPACE_DIR/scripts"'
 
 # Ensure the external environment file is sourced from .bashrc if it exists
 if [[ -f "$gh_env_path" ]]; then

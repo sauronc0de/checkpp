@@ -8,9 +8,9 @@
 
 ### Naming
 - Use `snake_case` for tool names, files, and flags
+- All project-specific scripts must use `${PROJECT_NAME}_` prefix (for example, `checkpp_simulate.sh` instead of `simulate.sh`)
 
 ### Structure
-- Binaries → `programs/`
 - Scripts → `scripts/`
 
 ### Mandatory Flags
@@ -55,6 +55,14 @@
 ### Args
 - Prefer flags (`--input`, `--output`)
 - Provide defaults, fail clearly on invalid input
+
+### Defaults
+- Declare all default values as macros/constants in an init section for easy editing.
+
+```bash
+DEFAULT_SECONDS=5
+DEFAULT_MESSAGE="Loading"
+```
 
 ### Exit codes
 - `0` = success, non-zero = error

@@ -73,12 +73,15 @@ RUN set -eux; \
 ###############################################################################
 # Tools installation
 ###############################################################################
-ARG CHECKPP_VERSION=v0.0.4
-ARG CHECKPP_ASSET=checkpp-v0.0.4
-RUN mkdir -p ${WORKSPACE_DIR}/tools/programs \
-    && curl -L \
-    -o ${WORKSPACE_DIR}/tools/programs/checkpp \
-    "https://github.com/sauronc0de/checkpp/releases/download/${CHECKPP_VERSION}/${CHECKPP_ASSET}"
+ARG CHECKPP_VERSION=v0.1.2
+ARG CHECKPP_ASSET=checkpp
+
+RUN set -eux; \
+    curl -fsSL \
+    -o /usr/local/bin/checkpp \
+    "https://github.com/sauronc0de/checkpp/releases/download/${CHECKPP_VERSION}/${CHECKPP_ASSET}"; \
+    chmod 0755 /usr/local/bin/checkpp; \
+    checkpp --version || true
 
 ###############################################################################
 # User and permissions configuration
@@ -109,7 +112,7 @@ RUN set -eux; \
 ENV WORKSPACE_DIR=${WORKSPACE_DIR}
 ENV PROJECT_NAME=${PROJECT_NAME}
 ENV XDG_RUNTIME_DIR=/tmp
-ENV PATH="${PATH}:${WORKSPACE_DIR}/tools/tasks:${WORKSPACE_DIR}/tools/programs"
+ENV PATH="${PATH}:${WORKSPACE_DIR}/scripts"
 
 WORKDIR ${WORKSPACE_DIR}
 
