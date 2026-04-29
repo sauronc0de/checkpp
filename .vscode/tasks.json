@@ -3,7 +3,7 @@
     "tasks": [
         {
             "label": "build.sh",
-            "command": "build.sh",
+            "command": "${workspaceFolder}/scripts/build.sh",
             "type": "shell",
             "args": [
                 "${command:cmake.buildTargetName}",
@@ -34,7 +34,7 @@
         {
             "label": "release.sh",
             "type": "shell",
-            "command": "${workspaceFolder}/tools/tasks/release.sh",
+            "command": "${workspaceFolder}/scripts/release.sh",
             "args": [],
             "detail": "Run the strict release workflow",
             "options": {
