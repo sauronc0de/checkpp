@@ -1,14 +1,96 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# ---- init/defaults ----
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-WORKSPACE_DIR="${WORKSPACE_DIR:-$(cd "${SCRIPT_DIR}/../.." && pwd)}"
+PROJECT_NAME="${PROJECT_NAME:-checkpp}"
+SCRIPT_NAME="$(basename "$0")"
+SCRIPT_VERSION="1.1.0"
+SCRIPT_DESCRIPTION="Build all CMake presets, run ctest preset, and run checkpp summary gate."
+
 PRESETS_FILE="${WORKSPACE_DIR}/CMakePresets.json"
 CHECKPP_TEST_PRESET="${CHECKPP_CHECKER_TEST_PRESET:-checkpp-tests}"
 CHECKPP_RELEASE_BINARY="${WORKSPACE_DIR}/build/release/checkpp"
 CHECKPP_RULES_FILE="${WORKSPACE_DIR}/config/rules.yaml"
 CHECKPP_IGNORE_PATHS_FILE="${WORKSPACE_DIR}/config/ignore_paths.txt"
 CHECKPP_LOG_FILE="${WORKSPACE_DIR}/build/checkpp.log"
+
+# Move to project root
+cd "${WORKSPACE_DIR}"
+
+print_short_help() {
+  printf '%s\n' "${SCRIPT_NAME}: build all presets, run ctest/checkpp gates; ex: ${SCRIPT_NAME} --test-preset checkpp-tests (log: build/checkpp.log)"
+}
+
+print_version() {
+  printf '%s version %s\n' "${SCRIPT_NAME}" "${SCRIPT_VERSION}"
+}
+
+print_help() {
+  cat <<EOF
+SYNOPSIS
+    ${SCRIPT_NAME} [OPTIONS]
+
+DESCRIPTION
+    ${SCRIPT_DESCRIPTION}
+
+OPTIONS
+    --test-preset <name>          CTest preset name (default: ${CHECKPP_TEST_PRESET})
+    -h, --help                    Print this help
+    --short-help                  Print one-line help
+    -v, --version                 Print script version
+
+EXAMPLES
+    ${SCRIPT_NAME}
+    ${SCRIPT_NAME} --test-preset checkpp-tests
+
+IMPLEMENTATION
+    version         ${SCRIPT_VERSION}
+    project         ${PROJECT_NAME}
+EOF
+}
+
+parse_args() {
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      -h|--help)
+        print_help
+        exit 0
+        ;;
+      --short-help)
+        print_short_help
+        exit 0
+        ;;
+      -v|--version)
+        print_version
+        exit 0
+        ;;
+      --test-preset)
+        if [ "$#" -lt 2 ] || [ -z "${2:-}" ] || [[ "${2}" == -* ]]; then
+          printf '%s\n' "Invalid arguments: --test-preset requires a non-empty value." >&2
+          printf '%s\n' "Try '${SCRIPT_NAME} --help'." >&2
+          exit 2
+        fi
+        CHECKPP_TEST_PRESET="$2"
+        shift 2
+        ;;
+      --test-preset=*)
+        CHECKPP_TEST_PRESET="${1#*=}"
+        if [ -z "${CHECKPP_TEST_PRESET}" ]; then
+          printf '%s\n' "Invalid arguments: --test-preset requires a non-empty value." >&2
+          printf '%s\n' "Try '${SCRIPT_NAME} --help'." >&2
+          exit 2
+        fi
+        shift
+        ;;
+      *)
+        printf '%s\n' "Invalid argument: $1" >&2
+        printf '%s\n' "Try '${SCRIPT_NAME} --help'." >&2
+        exit 2
+        ;;
+    esac
+  done
+}
 
 ensure_log_file() {
   local log_dir
@@ -80,7 +162,6 @@ run_build_for_preset() {
   local preset="$1"
 
   if cmake --preset "${preset}" >>"${CHECKPP_LOG_FILE}" 2>&1 && cmake --build --preset "${preset}" >>"${CHECKPP_LOG_FILE}" 2>&1; then
-    printf 'Build preset %s ok\n' "${preset}"
     return 0
   fi
 
@@ -94,7 +175,6 @@ run_ctest_preset() {
   local test_preset="$1"
 
   if ctest --preset "${test_preset}" >>"${CHECKPP_LOG_FILE}" 2>&1; then
-    printf 'CTest preset %s ok\n' "${test_preset}"
     return 0
   fi
 
@@ -144,12 +224,13 @@ run_code_check() {
     return 1
   fi
 
-  printf 'Code check ok\n'
+  printf 'PASS\n'
   return 0
 
 }
 
 main() {
+  parse_args "$@"
   ensure_log_file
 
   local presets_line

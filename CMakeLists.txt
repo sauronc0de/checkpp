@@ -121,7 +121,7 @@ include(CTest)
 
 if(BUILD_TESTING)
     set(CHECKPP_RULES_FILE "${CMAKE_CURRENT_SOURCE_DIR}/config/rules_c_family_cpp.yaml")
-    set(CHECKPP_IGNORE_PATHS_FILE "${CMAKE_CURRENT_SOURCE_DIR}/sw_example/fixtures/ignore_paths_for_tests.txt")
+    set(CHECKPP_IGNORE_PATHS_FILE "${CMAKE_CURRENT_SOURCE_DIR}/config/ignore_paths.txt")
     set(CHECKPP_ASSERT_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/cmake/RunCheckppAndAssert.cmake")
     set(CHECKPP_FIXTURES_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/sw_example/fixtures")
     set(CHECKPP_PASS_FIXTURE_SOURCE "${CHECKPP_FIXTURES_ROOT}/company_rules_pass")
