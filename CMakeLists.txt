@@ -117,6 +117,116 @@ install(TARGETS checkpp
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
+include(CTest)
+
+if(BUILD_TESTING)
+    set(CHECKPP_RULES_FILE "${CMAKE_CURRENT_SOURCE_DIR}/config/rules_c_family_cpp.yaml")
+    set(CHECKPP_IGNORE_PATHS_FILE "${CMAKE_CURRENT_SOURCE_DIR}/sw_example/fixtures/ignore_paths_for_tests.txt")
+    set(CHECKPP_ASSERT_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/cmake/RunCheckppAndAssert.cmake")
+    set(CHECKPP_FIXTURES_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/sw_example/fixtures")
+    set(CHECKPP_PASS_FIXTURE_SOURCE "${CHECKPP_FIXTURES_ROOT}/company_rules_pass")
+    set(CHECKPP_FAIL_FIXTURE_SOURCE "${CHECKPP_FIXTURES_ROOT}/company_rules_fail")
+    set(CHECKPP_INTENTIONAL_FAIL_FIXTURE_SOURCE "${CHECKPP_FIXTURES_ROOT}/intentional_fail_editable")
+    set(CHECKPP_PASS_FIXTURE_BUILD "${CMAKE_CURRENT_BINARY_DIR}/tests/company_rules_pass")
+    set(CHECKPP_FAIL_FIXTURE_BUILD "${CMAKE_CURRENT_BINARY_DIR}/tests/company_rules_fail")
+    set(CHECKPP_INTENTIONAL_FAIL_FIXTURE_BUILD "${CMAKE_CURRENT_BINARY_DIR}/tests/intentional_fail_editable")
+
+    add_test(
+        NAME checkpp_fixture_pass_configure
+        COMMAND ${CMAKE_COMMAND}
+                -S ${CHECKPP_PASS_FIXTURE_SOURCE}
+                -B ${CHECKPP_PASS_FIXTURE_BUILD}
+                -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+    )
+    add_test(
+        NAME checkpp_fixture_pass_build
+        COMMAND ${CMAKE_COMMAND} --build ${CHECKPP_PASS_FIXTURE_BUILD}
+    )
+    set_tests_properties(checkpp_fixture_pass_build PROPERTIES DEPENDS checkpp_fixture_pass_configure)
+
+    add_test(
+        NAME checkpp_no_error_case
+        COMMAND ${CMAKE_COMMAND}
+                -DCHECKPP_BIN=$<TARGET_FILE:checkpp>
+                -DIGNORE_PATHS_FILE=${CHECKPP_IGNORE_PATHS_FILE}
+                -DPROJECT_ROOT=${CHECKPP_PASS_FIXTURE_SOURCE}
+                -DCOMPILE_DB_DIR=${CHECKPP_PASS_FIXTURE_BUILD}
+                -DRULES_FILE=${CHECKPP_RULES_FILE}
+                -DEXPECT_EXIT_CODE=0
+                -DEXPECT_OUTPUT_REGEX=Errors:.*0
+                -P ${CHECKPP_ASSERT_SCRIPT}
+    )
+    set_tests_properties(checkpp_no_error_case PROPERTIES DEPENDS checkpp_fixture_pass_build)
+
+    add_test(
+        NAME checkpp_fixture_fail_configure
+        COMMAND ${CMAKE_COMMAND}
+                -S ${CHECKPP_FAIL_FIXTURE_SOURCE}
+                -B ${CHECKPP_FAIL_FIXTURE_BUILD}
+                -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+    )
+    add_test(
+        NAME checkpp_fixture_fail_build
+        COMMAND ${CMAKE_COMMAND} --build ${CHECKPP_FAIL_FIXTURE_BUILD}
+    )
+    set_tests_properties(checkpp_fixture_fail_build PROPERTIES DEPENDS checkpp_fixture_fail_configure)
+
+    add_test(
+        NAME checkpp_error_case
+        COMMAND ${CMAKE_COMMAND}
+                -DCHECKPP_BIN=$<TARGET_FILE:checkpp>
+                -DIGNORE_PATHS_FILE=${CHECKPP_IGNORE_PATHS_FILE}
+                -DPROJECT_ROOT=${CHECKPP_FAIL_FIXTURE_SOURCE}
+                -DCOMPILE_DB_DIR=${CHECKPP_FAIL_FIXTURE_BUILD}
+                -DRULES_FILE=${CHECKPP_RULES_FILE}
+                -DEXPECT_EXIT_CODE=2
+                -DEXPECT_OUTPUT_REGEX=Errors:.*[1-9][0-9]*
+                -P ${CHECKPP_ASSERT_SCRIPT}
+    )
+    set_tests_properties(checkpp_error_case PROPERTIES DEPENDS checkpp_fixture_fail_build)
+
+    add_test(
+        NAME checkpp_error_message_case
+        COMMAND ${CMAKE_COMMAND}
+                -DCHECKPP_BIN=$<TARGET_FILE:checkpp>
+                -DIGNORE_PATHS_FILE=${CHECKPP_IGNORE_PATHS_FILE}
+                -DPROJECT_ROOT=${CHECKPP_FAIL_FIXTURE_SOURCE}
+                -DCOMPILE_DB_DIR=${CHECKPP_FAIL_FIXTURE_BUILD}
+                -DRULES_FILE=${CHECKPP_RULES_FILE}
+                -DEXPECT_EXIT_CODE=2
+                -DEXPECT_OUTPUT_REGEX=Rule 1\.1: file 'BadMain\.cpp' should use snake_case
+                -P ${CHECKPP_ASSERT_SCRIPT}
+    )
+    set_tests_properties(checkpp_error_message_case PROPERTIES DEPENDS checkpp_fixture_fail_build)
+
+    add_test(
+        NAME checkpp_fixture_intentional_fail_configure
+        COMMAND ${CMAKE_COMMAND}
+                -S ${CHECKPP_INTENTIONAL_FAIL_FIXTURE_SOURCE}
+                -B ${CHECKPP_INTENTIONAL_FAIL_FIXTURE_BUILD}
+                -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+    )
+    add_test(
+        NAME checkpp_fixture_intentional_fail_build
+        COMMAND ${CMAKE_COMMAND} --build ${CHECKPP_INTENTIONAL_FAIL_FIXTURE_BUILD}
+    )
+    set_tests_properties(checkpp_fixture_intentional_fail_build PROPERTIES DEPENDS checkpp_fixture_intentional_fail_configure)
+
+    add_test(
+        NAME checkpp_intentional_fail_editable_case
+        COMMAND ${CMAKE_COMMAND}
+                -DCHECKPP_BIN=$<TARGET_FILE:checkpp>
+                -DIGNORE_PATHS_FILE=${CHECKPP_IGNORE_PATHS_FILE}
+                -DPROJECT_ROOT=${CHECKPP_INTENTIONAL_FAIL_FIXTURE_SOURCE}
+                -DCOMPILE_DB_DIR=${CHECKPP_INTENTIONAL_FAIL_FIXTURE_BUILD}
+                -DRULES_FILE=${CHECKPP_RULES_FILE}
+                -DEXPECT_EXIT_CODE=2
+                -DEXPECT_OUTPUT_REGEX=Rule 1\.1: file 'EditMeFail\.cpp' should use snake_case
+                -P ${CHECKPP_ASSERT_SCRIPT}
+    )
+    set_tests_properties(checkpp_intentional_fail_editable_case PROPERTIES DEPENDS checkpp_fixture_intentional_fail_build)
+endif()
+
 if(CHECKPP_BUILD_DEB)
     message(STATUS "🧱 Creating .deb packages with CPack is enabled.")
     set(CPACK_GENERATOR "DEB")

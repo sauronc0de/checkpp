@@ -70,5 +70,25 @@
             "description": "Build develop preset",
             "configuration": "Debug"
         }
+    ],
+    "testPresets": [
+        {
+            "name": "checkpp-tests",
+            "displayName": "checkpp CTest behavior tests",
+            "description": "Run CTest cases validating checkpp app pass/fail behavior",
+            "configurePreset": "develop",
+            "output": {
+                "outputOnFailure": true
+            },
+            "execution": {
+                "noTestsAction": "error",
+                "stopOnFailure": true
+            },
+            "filter": {
+                "include": {
+                    "name": "^checkpp_"
+                }
+            }
+        }
     ]
 }
