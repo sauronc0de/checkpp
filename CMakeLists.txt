@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(checkpp VERSION 0.1.3 LANGUAGES C CXX)
+project(checkpp VERSION 0.1.4 LANGUAGES C CXX)
 
 option(CHECKPP_STRIP_SYMBOLS "Strip symbols from executable" OFF)
 option(CHECKPP_LTO "Enable Link-Time Optimization" OFF)
